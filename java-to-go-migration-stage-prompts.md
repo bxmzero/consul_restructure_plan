@@ -1,93 +1,14 @@
-# Java 到 Go 重构阶段 1-6 启动提示词
+# Java 到 Go 重构阶段提示词
 
-## 1. 使用说明
-
-六个阶段必须分别执行 Superpowers，不允许通过一个任务直接完成全部阶段。
-
-这些提示词必须在已经安装并启用 Superpowers 的 Claude Code 环境中执行。Agent 必须实际调用并遵循提示词中指定的 Superpowers skill，不能只使用普通对话模拟同名流程。如果指定 skill 不可用，应停止当前阶段并明确说明，不得跳过后直接实现。
-
-每个阶段的基本流程：
+本文档只保留可复制给 Agent 的提示词。使用方式见：
 
 ```text
-阶段 N
--> 批次 N-B01：brainstorming -> writing-plans -> 实现和 TDD -> review -> 更新治理文档
--> 批次 N-B02：brainstorming -> writing-plans -> 实现和 TDD -> review -> 更新治理文档
--> ...
--> 阶段 N 最后一个批次完成后，执行阶段级 review 和 verification-before-completion
--> 生成 phase-N-handoff.md
--> 进入阶段 N+1
+/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
 ```
-
-阶段和批次隔离原则：
-
-- 一个阶段可以拆成多个批次执行，例如阶段 1 ORM 可以先迁移部分表，再迁移另一部分表。
-- 每次只执行一个批次，不在一个批次里混做多个阶段。
-- 阶段 1 只生成 ORM / Repository 基础代码；阶段 2 才生成 API Router / Handler；后续阶段依次推进。
-- 当前批次只处理声明的 Java source scope 和 Go target scope。
-- 后续批次可以读取前序批次成果，但不得覆盖前序批次的 Superpowers specs/plans。
-- 后续阶段可以读取前序阶段 handoff，但不得隐式改写前序阶段已验收成果。
-- 如果必须修改前序批次或前序阶段成果，必须记录 Decision/GAP、影响范围和重新验证结果。
-- `phase-N-handoff.md` 只在当前阶段全部批次完成后生成，不要每个批次都生成阶段 handoff。
-
-所有阶段共同读取：
-
-```text
-/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
-/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
-```
-
-其中：
-
-- `java-to-go-migration-mainline.md` 定义六阶段主线、边界和全局溯源规则。
-- `migration-governance-templates.md` 定义所有自定义迁移治理文档的固定结构、状态、编号和增量更新规则。
-
-本迁移项目的文档落点：
-
-```text
-Superpowers 产物：
-- <GO_PROJECT_ROOT>/spec/superpowers/specs/
-- <GO_PROJECT_ROOT>/spec/superpowers/plans/
-
-自定义迁移治理产物：
-- <GO_PROJECT_ROOT>/spec/migration/migration-roadmap.md
-- <GO_PROJECT_ROOT>/spec/migration/migration-decisions.md
-- <GO_PROJECT_ROOT>/spec/migration/migration-gaps.md
-- <GO_PROJECT_ROOT>/spec/migration/migration-traceability.md
-- <GO_PROJECT_ROOT>/spec/migration/handoffs/phase-N-<name>-handoff.md
-```
-
-如果 Superpowers 因工具默认行为生成到 `docs/superpowers/...`，不要直接删除或覆盖；必须在 `migration-roadmap.md` 中记录实际路径，并等待人工确认是否调整目录。自定义迁移治理文档不得混放到 `docs/superpowers/...`。
-
-Agent 创建或更新以下文件时，不得自行发明格式：
-
-```text
-migration-roadmap.md
-migration-decisions.md
-migration-gaps.md
-migration-traceability.md
-phase-N-handoff.md
-```
-
-使用前替换以下占位符：
-
-```text
-<JAVA_PROJECT_ROOT>
-<GO_PROJECT_ROOT>
-<JAVA_BASELINE_COMMIT>
-<CURRENT_BATCH>
-<CURRENT_BATCH_GOAL>
-<CURRENT_BATCH_JAVA_SCOPE>
-<CURRENT_BATCH_GO_SCOPE>
-<PREVIOUS_BATCH_REFERENCES>
-<IS_FINAL_BATCH_OF_PHASE>
-<PREVIOUS_STAGE_HANDOFF>
-```
-
-每个阶段启动时只执行 brainstorming，不立即写代码。人工确认 brainstorming 结果后，再执行本文档第 9 节的通用后续提示词。
 
 ---
 
-## 2. 阶段 1：持久化层迁移
+## 1. 阶段 1：持久化层迁移
 
 ```text
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
@@ -95,12 +16,8 @@ phase-N-handoff.md
 当前只执行 Java -> Go 重构的阶段 1：持久化层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
 
-阶段标签：
-- 阶段标签：stage-1-persistence
-- 批次前缀：P1-BNN
-- Superpowers 文件名标签：p1-bNN-orm-<domain>
-
 开始前请完整阅读：
+- 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 
@@ -124,7 +41,7 @@ phase-N-handoff.md
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
-- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p1-b01-orm-kv-design.md、p1-b01-orm-kv-plan.md。
+- Superpowers spec/plan 文件名必须包含批次 ID，例如 P1-orm-01-design.md、P1-orm-01-plan.md。
 - 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
 
 阶段目标：
@@ -189,7 +106,7 @@ GORM 实现约束：
 
 ---
 
-## 3. 阶段 2：API 契约层迁移
+## 2. 阶段 2：API 契约层迁移
 
 ```text
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
@@ -197,12 +114,8 @@ GORM 实现约束：
 当前只执行 Java -> Go 重构的阶段 2：API 契约层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
 
-阶段标签：
-- 阶段标签：stage-2-api-contract
-- 批次前缀：P2-BNN
-- Superpowers 文件名标签：p2-bNN-api-<domain>
-
 开始前请完整阅读：
+- 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - 上一阶段交接：<PREVIOUS_STAGE_HANDOFF>
@@ -232,7 +145,7 @@ GORM 实现约束：
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
-- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p2-b01-api-kv-design.md、p2-b01-api-kv-plan.md。
+- Superpowers spec/plan 文件名必须包含批次 ID，例如 P2-api-01-design.md、P2-api-01-plan.md。
 - 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
 
 阶段目标：
@@ -284,7 +197,7 @@ GORM 实现约束：
 
 ---
 
-## 4. 阶段 3：横切基础设施迁移
+## 3. 阶段 3：横切基础设施迁移
 
 ```text
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
@@ -292,12 +205,8 @@ GORM 实现约束：
 当前只执行 Java -> Go 重构的阶段 3：横切基础设施迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
 
-阶段标签：
-- 阶段标签：stage-3-infrastructure
-- 批次前缀：P3-BNN
-- Superpowers 文件名标签：p3-bNN-infra-<domain>
-
 开始前请完整阅读：
+- 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - 上一阶段交接：<PREVIOUS_STAGE_HANDOFF>
@@ -327,7 +236,7 @@ GORM 实现约束：
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
-- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p3-b01-infra-interceptor-design.md、p3-b01-infra-interceptor-plan.md。
+- Superpowers spec/plan 文件名必须包含批次 ID，例如 P3-infra-01-design.md、P3-infra-01-plan.md。
 - 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
 
 阶段目标：
@@ -374,7 +283,7 @@ GORM 实现约束：
 
 ---
 
-## 5. 阶段 4：并发与生命周期迁移
+## 4. 阶段 4：并发与生命周期迁移
 
 ```text
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
@@ -382,12 +291,8 @@ GORM 实现约束：
 当前只执行 Java -> Go 重构的阶段 4：并发与生命周期迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
 
-阶段标签：
-- 阶段标签：stage-4-runtime-lifecycle
-- 批次前缀：P4-BNN
-- Superpowers 文件名标签：p4-bNN-runtime-<domain>
-
 开始前请完整阅读：
+- 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - 上一阶段交接：<PREVIOUS_STAGE_HANDOFF>
@@ -417,7 +322,7 @@ GORM 实现约束：
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
-- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p4-b01-runtime-scheduler-design.md、p4-b01-runtime-scheduler-plan.md。
+- Superpowers spec/plan 文件名必须包含批次 ID，例如 P4-runtime-01-design.md、P4-runtime-01-plan.md。
 - 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
 
 阶段目标：
@@ -465,7 +370,7 @@ GORM 实现约束：
 
 ---
 
-## 6. 阶段 5：Service 业务层迁移
+## 5. 阶段 5：Service 业务层迁移
 
 ```text
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
@@ -473,12 +378,8 @@ GORM 实现约束：
 当前只执行 Java -> Go 重构的阶段 5：Service 业务层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
 
-阶段标签：
-- 阶段标签：stage-5-service
-- 批次前缀：P5-BNN
-- Superpowers 文件名标签：p5-bNN-service-<domain>
-
 开始前请完整阅读：
+- 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - 上一阶段交接：<PREVIOUS_STAGE_HANDOFF>
@@ -508,7 +409,7 @@ GORM 实现约束：
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
-- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p5-b01-service-kv-design.md、p5-b01-service-kv-plan.md。
+- Superpowers spec/plan 文件名必须包含批次 ID，例如 P5-service-01-design.md、P5-service-01-plan.md。
 - 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
 
 阶段目标：
@@ -558,7 +459,7 @@ GORM 实现约束：
 
 ---
 
-## 7. 阶段 6：系统级功能校验
+## 6. 阶段 6：系统级功能校验
 
 ```text
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
@@ -566,12 +467,8 @@ GORM 实现约束：
 当前只执行 Java -> Go 重构的阶段 6：系统级功能校验。
 当前阶段只进行验证方案分析，不立即修改代码。
 
-阶段标签：
-- 阶段标签：stage-6-verification
-- 批次前缀：P6-BNN
-- Superpowers 文件名标签：p6-bNN-verification-<domain>
-
 开始前请完整阅读：
+- 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - 阶段 1-5 的 handoff 文档
@@ -604,7 +501,7 @@ GORM 实现约束：
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
-- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p6-b01-verification-kv-design.md、p6-b01-verification-kv-plan.md。
+- Superpowers spec/plan 文件名必须包含批次 ID，例如 P6-verify-01-design.md、P6-verify-01-plan.md。
 - 当前批次只能验证 Java source scope 和 Go target scope 内的功能；不得隐式扩大到未声明范围。
 
 阶段目标：
@@ -651,30 +548,9 @@ GORM 实现约束：
 
 ---
 
-## 8. 每阶段通用确认清单
+## 7. 人工确认后的通用后续提示词
 
-在确认 brainstorming 结果前检查：
-
-```text
-1. 是否只覆盖当前阶段？
-2. 是否明确列出非目标？
-3. 是否读取上一阶段 handoff？
-4. 是否记录 Java 基线 commit？
-5. 是否规划 Java/Go 文件和符号溯源？
-6. 是否规划 migration-traceability.md 更新？
-7. 是否定义阶段测试和完成条件？
-8. 是否识别风险、假设和 GAP？
-9. 是否避免提前实现后续阶段？
-10. 是否明确当前批次 ID、Java source scope、Go target scope 和前序批次参考？
-11. 是否确认当前批次不会覆盖前序批次 specs/plans 或已验收代码？
-12. 是否确认只有阶段最后一个批次完成后才生成 phase-N-handoff.md？
-```
-
----
-
-## 9. 人工确认后的通用后续提示词
-
-### 9.1 生成阶段计划
+### 7.1 生成当前批次计划
 
 ```text
 我已确认当前阶段的 brainstorming 结果。
@@ -689,6 +565,7 @@ GORM 实现约束：
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
 
 继续遵守：
+- 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - Superpowers plans 输出到：<GO_PROJECT_ROOT>/spec/superpowers/plans/
@@ -707,7 +584,7 @@ GORM 实现约束：
 - 只有 <IS_FINAL_BATCH_OF_PHASE> 为“是”且本阶段所有批次都通过 Review 时，才规划生成 phase-N-handoff.md。
 ```
 
-### 9.2 执行当前阶段计划
+### 7.2 执行当前批次计划
 
 ```text
 请按照已确认的当前阶段计划执行。
@@ -721,6 +598,7 @@ GORM 实现约束：
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
 
 继续遵守：
+- 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - 当前阶段计划文档必须来自：<GO_PROJECT_ROOT>/spec/superpowers/plans/
@@ -740,7 +618,7 @@ GORM 实现约束：
 - 每个批次完成后报告测试结果、变更文件和未解决问题。
 ```
 
-### 9.3 阶段 Review 和完成验证
+### 7.3 批次 Review 和完成验证
 
 ```text
 当前批次实现任务已经完成。
@@ -755,6 +633,7 @@ GORM 实现约束：
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
 
 继续遵守：
+- 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - Superpowers specs/plans 位置：<GO_PROJECT_ROOT>/spec/superpowers/

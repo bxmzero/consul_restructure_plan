@@ -76,43 +76,23 @@ Java 源码和实际运行行为
 - 当前迁移批次
 - 最后更新时间
 
-### 3.3 阶段标签和提示词索引
-
-阶段启动提示词的唯一来源是：
-
-```text
-/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-stage-prompts.md
-```
-
-治理文档只记录阶段标签、批次标签和产物路径，不复制阶段提示词全文。
-
-| 阶段 | 阶段标签 | 批次前缀 | Superpowers 文件名标签 |
-|---|---|---|---|
-| 阶段 1：持久化层迁移 | `stage-1-persistence` | `P1-BNN` | `p1-bNN-orm-<domain>` |
-| 阶段 2：API 契约层迁移 | `stage-2-api-contract` | `P2-BNN` | `p2-bNN-api-<domain>` |
-| 阶段 3：横切基础设施迁移 | `stage-3-infrastructure` | `P3-BNN` | `p3-bNN-infra-<domain>` |
-| 阶段 4：并发与生命周期迁移 | `stage-4-runtime-lifecycle` | `P4-BNN` | `p4-bNN-runtime-<domain>` |
-| 阶段 5：Service 业务层迁移 | `stage-5-service` | `P5-BNN` | `p5-bNN-service-<domain>` |
-| 阶段 6：系统级功能校验 | `stage-6-verification` | `P6-BNN` | `p6-bNN-verification-<domain>` |
-
-每个批次的 Superpowers specs/plans 文件名必须包含阶段编号、批次 ID 和能力域标签。
-
-### 3.4 编号规则
+### 3.3 编号规则
 
 ```text
 迁移决策：DEC-001、DEC-002、DEC-003
 迁移缺口：GAP-001、GAP-002、GAP-003
-迁移批次：P1-B01、P1-B02、P2-B01
+迁移批次：P1-orm-01、P1-orm-02、P2-api-01
 ```
 
 说明：
 
-- `P1-B01` 表示阶段 1 的第 1 个批次
+- 批次 ID 格式为 `<阶段ID>-<业务/能力>-<步骤序号>`，例如 `P1-orm-01`
+- `P1-orm-01` 表示阶段 1 持久化层迁移的 ORM 第 1 个批次
 - 编号一旦分配不得重复使用
 - 已废弃或已解决的编号不得删除或重新分配
 - 新记录使用当前最大编号加一
 
-### 3.5 修改规则
+### 3.4 修改规则
 
 ```text
 migration-roadmap.md：更新现有状态，不重复创建同名阶段
@@ -122,28 +102,28 @@ migration-traceability.md：增量更新映射，不覆盖无关历史记录
 phase-N-handoff.md：阶段结束时生成，重新验收时更新同一个文件
 ```
 
-### 3.6 批次隔离规则
+### 3.5 批次隔离规则
 
-同一阶段可以拆成多个批次执行，例如阶段 1 ORM 可以拆成 `P1-B01`、`P1-B02`。
+同一阶段可以拆成多个批次执行，例如阶段 1 ORM 可以拆成 `P1-orm-01`、`P1-orm-02`。
 
 每个批次必须有清晰边界，避免前后批次或不同阶段互相干扰。
 
 批次启动前必须明确：
 
-- 批次 ID，例如 `P1-B01`
+- 批次 ID，例如 `P1-orm-01`
 - 当前批次目标
 - 当前批次 Java source scope，即本次允许分析和迁移的 Java 源码路径
 - 当前批次 Go target scope，即本次允许新增或修改的 Go 目录或文件
 - 当前批次允许读取的历史文档
 - 当前批次禁止修改的文件或能力范围
 
-Superpowers specs/plans 文件名必须包含批次 ID 和简短领域名：
+Superpowers specs/plans 文件名必须包含批次 ID：
 
 ```text
-spec/superpowers/specs/YYYY-MM-DD-p1-b01-orm-kv-design.md
-spec/superpowers/plans/YYYY-MM-DD-p1-b01-orm-kv-plan.md
-spec/superpowers/specs/YYYY-MM-DD-p1-b02-orm-<domain>-design.md
-spec/superpowers/plans/YYYY-MM-DD-p1-b02-orm-<domain>-plan.md
+spec/superpowers/specs/YYYY-MM-DD-P1-orm-01-design.md
+spec/superpowers/plans/YYYY-MM-DD-P1-orm-01-plan.md
+spec/superpowers/specs/YYYY-MM-DD-P1-orm-kv-01-design.md
+spec/superpowers/plans/YYYY-MM-DD-P1-orm-kv-01-plan.md
 ```
 
 批次之间的更新规则：
@@ -154,7 +134,7 @@ spec/superpowers/plans/YYYY-MM-DD-p1-b02-orm-<domain>-plan.md
 - 批次完成时只更新 `migration-roadmap.md`、`migration-traceability.md`、`migration-decisions.md`、`migration-gaps.md`。
 - `phase-N-handoff.md` 只在整个阶段完成并通过 Review 后生成；不要每个批次都生成一个阶段 handoff。
 
-### 3.7 禁止事项
+### 3.6 禁止事项
 
 - 不允许删除历史 Decision 或 GAP
 - 不允许把未验证内容标记为已完成
@@ -205,7 +185,7 @@ spec/superpowers/plans/YYYY-MM-DD-p1-b02-orm-<domain>-plan.md
 
 | 阶段 | 名称 | 当前批次 | 状态 | 前置依赖 | 验证结果 | 阻塞项 |
 |---|---|---|---|---|---|---|
-| 1 | 持久化层迁移 | `P1-B01` | 进行中 | 无 | 部分通过 | `GAP-001` |
+| 1 | 持久化层迁移 | `P1-orm-01` | 进行中 | 无 | 部分通过 | `GAP-001` |
 | 2 | API 契约层迁移 | - | 未开始 | 阶段 1 | 未执行 | - |
 | 3 | 横切基础设施迁移 | - | 未开始 | 阶段 2 | 未执行 | - |
 | 4 | 并发与生命周期迁移 | - | 未开始 | 阶段 3 | 未执行 | - |
@@ -227,7 +207,7 @@ spec/superpowers/plans/YYYY-MM-DD-p1-b02-orm-<domain>-plan.md
 
 | 批次 | 阶段 | 目标 | Java source scope | Go target scope | Superpowers spec | Superpowers plan | 状态 |
 |---|---|---|---|---|---|---|---|
-| `P1-B01` | 阶段 1 | `<GOAL>` | `<JAVA_SCOPE>` | `<GO_SCOPE>` | `<SPEC_PATH>` | `<PLAN_PATH>` | `<STATUS>` |
+| `P1-orm-01` | 阶段 1 | `<GOAL>` | `<JAVA_SCOPE>` | `<GO_SCOPE>` | `<SPEC_PATH>` | `<PLAN_PATH>` | `<STATUS>` |
 
 ## 当前阶段门禁
 
@@ -444,7 +424,7 @@ spec/superpowers/plans/YYYY-MM-DD-p1-b02-orm-<domain>-plan.md
 
 | 阶段 | 批次 | Java contentPath | Java 已迁移符号 | Go contentPath | Go 关键符号 | 映射类型 | 状态 | 验证结果 | GAP/备注 |
 |---|---|---|---|---|---|---|---|---|---|
-| 阶段 1 | `P1-B01` | `bic-service/src/.../FooMapper.java` | `selectFoo` | `internal/.../foo_repository.go` | `GetFoo` | 1:1 | 已验证 | 测试通过 | 无 |
+| 阶段 1 | `P1-orm-01` | `bic-service/src/.../FooMapper.java` | `selectFoo` | `internal/.../foo_repository.go` | `GetFoo` | 1:1 | 已验证 | 测试通过 | 无 |
 
 ## 增量变更记录
 

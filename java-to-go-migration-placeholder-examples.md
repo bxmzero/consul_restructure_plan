@@ -13,7 +13,7 @@
 | `<JAVA_PROJECT_ROOT>` | Java 项目根目录 | 必填 |
 | `<GO_PROJECT_ROOT>` | Go 项目根目录 | 必填 |
 | `<JAVA_BASELINE_COMMIT>` | 本次迁移参考的 Java commit SHA | 必填 |
-| `<CURRENT_BATCH>` | 当前批次 ID，例如 `P1-B01` | 必填 |
+| `<CURRENT_BATCH>` | 当前批次 ID，例如 `P1-orm-01` | 必填 |
 | `<CURRENT_BATCH_GOAL>` | 当前批次目标 | 必填 |
 | `<CURRENT_BATCH_JAVA_SCOPE>` | 当前批次允许分析和迁移的 Java 源码范围 | 必填 |
 | `<CURRENT_BATCH_GO_SCOPE>` | 当前批次允许新增或修改的 Go 目录或文件范围 | 建议填写 |
@@ -47,7 +47,7 @@
 执行 git rev-parse HEAD 后填写，例如：a1b2c3d4e5f6...
 
 <CURRENT_BATCH>
-P1-B01
+P1-orm-01
 
 <CURRENT_BATCH_GOAL>
 迁移 bic_service_kv 相关 Java Entity、MyBatis Mapper、SQL 到 Go GORM Repository，作为阶段 1 ORM 迁移的第一个试点批次。
@@ -81,7 +81,7 @@ P1-B01
 
 适用场景：
 
-- 阶段 1 已经完成 `P1-B01`。
+- 阶段 1 已经完成 `P1-orm-01`。
 - 当前继续迁移另一组 Entity、Mapper、MyBatis SQL。
 - 需要复用前一批次的目录结构、GORM 约束、测试风格和迁移决策。
 
@@ -93,13 +93,13 @@ P1-B01
 /Users/baoxiaomin/project_code/consul/bic-consul-go
 
 <JAVA_BASELINE_COMMIT>
-和 P1-B01 使用相同 Java 基线时填写同一个 commit SHA；如果 Java 代码有变化，填写新的 commit SHA，并在 migration-traceability.md 记录增量。
+和 P1-orm-01 使用相同 Java 基线时填写同一个 commit SHA；如果 Java 代码有变化，填写新的 commit SHA，并在 migration-traceability.md 记录增量。
 
 <CURRENT_BATCH>
-P1-B02
+P1-orm-02
 
 <CURRENT_BATCH_GOAL>
-迁移另一组 Java Entity、MyBatis Mapper、SQL 到 Go GORM Repository，并复用 P1-B01 已建立的 Repository 结构、GORM 约束和测试风格。
+迁移另一组 Java Entity、MyBatis Mapper、SQL 到 Go GORM Repository，并复用 P1-orm-01 已建立的 Repository 结构、GORM 约束和测试风格。
 
 <CURRENT_BATCH_JAVA_SCOPE>
 - 本批次对应的 Entity Java 文件
@@ -117,11 +117,11 @@ P1-B02
 - spec/superpowers/plans/
 
 <PREVIOUS_BATCH_REFERENCES>
-- <GO_PROJECT_ROOT>/spec/superpowers/specs/YYYY-MM-DD-p1-b01-orm-kv-design.md
-- <GO_PROJECT_ROOT>/spec/superpowers/plans/YYYY-MM-DD-p1-b01-orm-kv-plan.md
-- <GO_PROJECT_ROOT>/spec/migration/migration-traceability.md 中 P1-B01 记录
-- <GO_PROJECT_ROOT>/spec/migration/migration-decisions.md 中 P1-B01 相关 Decision
-- <GO_PROJECT_ROOT>/spec/migration/migration-gaps.md 中 P1-B01 未关闭 GAP
+- <GO_PROJECT_ROOT>/spec/superpowers/specs/YYYY-MM-DD-P1-orm-01-design.md
+- <GO_PROJECT_ROOT>/spec/superpowers/plans/YYYY-MM-DD-P1-orm-01-plan.md
+- <GO_PROJECT_ROOT>/spec/migration/migration-traceability.md 中 P1-orm-01 记录
+- <GO_PROJECT_ROOT>/spec/migration/migration-decisions.md 中 P1-orm-01 相关 Decision
+- <GO_PROJECT_ROOT>/spec/migration/migration-gaps.md 中 P1-orm-01 未关闭 GAP
 
 <IS_FINAL_BATCH_OF_PHASE>
 否。除非这是阶段 1 最后一个 ORM 批次，否则不要生成 phase-1-handoff.md。
@@ -139,7 +139,7 @@ P1-B02
 
 ```text
 <CURRENT_BATCH>
-P1-B0N
+P1-orm-NN
 
 <CURRENT_BATCH_GOAL>
 完成阶段 1 最后一组 Java Entity、MyBatis Mapper、SQL 到 Go GORM Repository 的迁移，并对阶段 1 全部批次做完整性收口。
@@ -157,8 +157,8 @@ P1-B0N
 - spec/superpowers/plans/
 
 <PREVIOUS_BATCH_REFERENCES>
-- P1-B01 到 P1-B0N-1 的 Superpowers specs
-- P1-B01 到 P1-B0N-1 的 Superpowers plans
+- P1-orm-01 到上一批次的 Superpowers specs
+- P1-orm-01 到上一批次的 Superpowers plans
 - <GO_PROJECT_ROOT>/spec/migration/migration-roadmap.md
 - <GO_PROJECT_ROOT>/spec/migration/migration-traceability.md
 - <GO_PROJECT_ROOT>/spec/migration/migration-decisions.md
@@ -190,7 +190,7 @@ P1-B0N
 填写阶段 2 使用的 Java 基线 commit SHA。
 
 <CURRENT_BATCH>
-P2-B01
+P2-api-01
 
 <CURRENT_BATCH_GOAL>
 迁移第一组 Java Controller 接口契约到 Go Gin Router / Handler / DTO，Service 层仅通过 interface 打桩。
