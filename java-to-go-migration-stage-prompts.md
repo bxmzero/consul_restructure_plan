@@ -9,17 +9,25 @@
 每个阶段的基本流程：
 
 ```text
-阶段启动提示词
--> brainstorming
--> 人工确认范围和方案
--> writing-plans
--> 分批实现和 TDD
--> code review
--> verification-before-completion
--> 更新 traceability / decisions / gaps
--> 生成 handoff
--> 进入下一阶段
+阶段 N
+-> 批次 N-B01：brainstorming -> writing-plans -> 实现和 TDD -> review -> 更新治理文档
+-> 批次 N-B02：brainstorming -> writing-plans -> 实现和 TDD -> review -> 更新治理文档
+-> ...
+-> 阶段 N 最后一个批次完成后，执行阶段级 review 和 verification-before-completion
+-> 生成 phase-N-handoff.md
+-> 进入阶段 N+1
 ```
+
+阶段和批次隔离原则：
+
+- 一个阶段可以拆成多个批次执行，例如阶段 1 ORM 可以先迁移部分表，再迁移另一部分表。
+- 每次只执行一个批次，不在一个批次里混做多个阶段。
+- 阶段 1 只生成 ORM / Repository 基础代码；阶段 2 才生成 API Router / Handler；后续阶段依次推进。
+- 当前批次只处理声明的 Java source scope 和 Go target scope。
+- 后续批次可以读取前序批次成果，但不得覆盖前序批次的 Superpowers specs/plans。
+- 后续阶段可以读取前序阶段 handoff，但不得隐式改写前序阶段已验收成果。
+- 如果必须修改前序批次或前序阶段成果，必须记录 Decision/GAP、影响范围和重新验证结果。
+- `phase-N-handoff.md` 只在当前阶段全部批次完成后生成，不要每个批次都生成阶段 handoff。
 
 所有阶段共同读取：
 
@@ -32,6 +40,23 @@
 
 - `java-to-go-migration-mainline.md` 定义六阶段主线、边界和全局溯源规则。
 - `migration-governance-templates.md` 定义所有自定义迁移治理文档的固定结构、状态、编号和增量更新规则。
+
+本迁移项目的文档落点：
+
+```text
+Superpowers 产物：
+- <GO_PROJECT_ROOT>/spec/superpowers/specs/
+- <GO_PROJECT_ROOT>/spec/superpowers/plans/
+
+自定义迁移治理产物：
+- <GO_PROJECT_ROOT>/spec/migration/migration-roadmap.md
+- <GO_PROJECT_ROOT>/spec/migration/migration-decisions.md
+- <GO_PROJECT_ROOT>/spec/migration/migration-gaps.md
+- <GO_PROJECT_ROOT>/spec/migration/migration-traceability.md
+- <GO_PROJECT_ROOT>/spec/migration/handoffs/phase-N-<name>-handoff.md
+```
+
+如果 Superpowers 因工具默认行为生成到 `docs/superpowers/...`，不要直接删除或覆盖；必须在 `migration-roadmap.md` 中记录实际路径，并等待人工确认是否调整目录。自定义迁移治理文档不得混放到 `docs/superpowers/...`。
 
 Agent 创建或更新以下文件时，不得自行发明格式：
 
@@ -50,6 +75,11 @@ phase-N-handoff.md
 <GO_PROJECT_ROOT>
 <JAVA_BASELINE_COMMIT>
 <CURRENT_BATCH>
+<CURRENT_BATCH_GOAL>
+<CURRENT_BATCH_JAVA_SCOPE>
+<CURRENT_BATCH_GO_SCOPE>
+<PREVIOUS_BATCH_REFERENCES>
+<IS_FINAL_BATCH_OF_PHASE>
 <PREVIOUS_STAGE_HANDOFF>
 ```
 
@@ -65,11 +95,22 @@ phase-N-handoff.md
 当前只执行 Java -> Go 重构的阶段 1：持久化层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
 
+阶段标签：
+- 阶段标签：stage-1-persistence
+- 批次前缀：P1-BNN
+- Superpowers 文件名标签：p1-bNN-orm-<domain>
+
 开始前请完整阅读：
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 
 所有自定义迁移治理文档必须严格遵循治理模板，不得省略必填字段，不得覆盖无关历史记录。
+
+文档输出位置要求：
+- Superpowers specs 输出到：<GO_PROJECT_ROOT>/spec/superpowers/specs/
+- Superpowers plans 输出到：<GO_PROJECT_ROOT>/spec/superpowers/plans/
+- 自定义迁移治理文档输出到：<GO_PROJECT_ROOT>/spec/migration/
+- 如果 Superpowers 因默认行为生成到 docs/superpowers/，不要直接删除或覆盖，先在 migration-roadmap.md 中记录实际路径并等待人工确认。
 
 项目位置：
 - Java 项目：<JAVA_PROJECT_ROOT>
@@ -77,7 +118,14 @@ phase-N-handoff.md
 - Java 基线 commit：<JAVA_BASELINE_COMMIT>
 
 当前批次：
-<CURRENT_BATCH>
+- 批次 ID：<CURRENT_BATCH>
+- 批次目标：<CURRENT_BATCH_GOAL>
+- Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
+- Go target scope：<CURRENT_BATCH_GO_SCOPE>
+- 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
+- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p1-b01-orm-kv-design.md、p1-b01-orm-kv-plan.md。
+- 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
 
 阶段目标：
 - 将 Java Entity、MyBatis Mapper、SQL 和事务基础能力迁移为 Go 持久化 Model、ORM 和 Repository。
@@ -149,12 +197,28 @@ GORM 实现约束：
 当前只执行 Java -> Go 重构的阶段 2：API 契约层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
 
+阶段标签：
+- 阶段标签：stage-2-api-contract
+- 批次前缀：P2-BNN
+- Superpowers 文件名标签：p2-bNN-api-<domain>
+
 开始前请完整阅读：
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - 上一阶段交接：<PREVIOUS_STAGE_HANDOFF>
 
+阶段前置条件：
+- 阶段 1 持久化层迁移必须已完成全部批次，并生成 phase-1-handoff.md。
+- 如果阶段 1 只有部分 ORM 批次完成，不得提前启动阶段 2。
+- 当前阶段只生成 API Router / Handler / DTO / Constant / Enum / Service Stub，不回头补做 ORM 批次。
+
 所有自定义迁移治理文档必须严格遵循治理模板，不得省略必填字段，不得覆盖无关历史记录。
+
+文档输出位置要求：
+- Superpowers specs 输出到：<GO_PROJECT_ROOT>/spec/superpowers/specs/
+- Superpowers plans 输出到：<GO_PROJECT_ROOT>/spec/superpowers/plans/
+- 自定义迁移治理文档输出到：<GO_PROJECT_ROOT>/spec/migration/
+- 如果 Superpowers 因默认行为生成到 docs/superpowers/，不要直接删除或覆盖，先在 migration-roadmap.md 中记录实际路径并等待人工确认。
 
 项目位置：
 - Java 项目：<JAVA_PROJECT_ROOT>
@@ -162,7 +226,14 @@ GORM 实现约束：
 - Java 基线 commit：<JAVA_BASELINE_COMMIT>
 
 当前批次：
-<CURRENT_BATCH>
+- 批次 ID：<CURRENT_BATCH>
+- 批次目标：<CURRENT_BATCH_GOAL>
+- Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
+- Go target scope：<CURRENT_BATCH_GO_SCOPE>
+- 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
+- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p2-b01-api-kv-design.md、p2-b01-api-kv-plan.md。
+- 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
 
 阶段目标：
 - 将 Java Controller 对外契约迁移为 Go Router 和 Handler。
@@ -221,12 +292,28 @@ GORM 实现约束：
 当前只执行 Java -> Go 重构的阶段 3：横切基础设施迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
 
+阶段标签：
+- 阶段标签：stage-3-infrastructure
+- 批次前缀：P3-BNN
+- Superpowers 文件名标签：p3-bNN-infra-<domain>
+
 开始前请完整阅读：
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - 上一阶段交接：<PREVIOUS_STAGE_HANDOFF>
 
+阶段前置条件：
+- 阶段 2 API 契约层迁移必须已完成全部批次，并生成 phase-2-handoff.md。
+- 如果阶段 2 只有部分 API 批次完成，不得提前启动阶段 3。
+- 当前阶段只迁移横切基础设施，不回头补做 ORM 或 API 批次。
+
 所有自定义迁移治理文档必须严格遵循治理模板，不得省略必填字段，不得覆盖无关历史记录。
+
+文档输出位置要求：
+- Superpowers specs 输出到：<GO_PROJECT_ROOT>/spec/superpowers/specs/
+- Superpowers plans 输出到：<GO_PROJECT_ROOT>/spec/superpowers/plans/
+- 自定义迁移治理文档输出到：<GO_PROJECT_ROOT>/spec/migration/
+- 如果 Superpowers 因默认行为生成到 docs/superpowers/，不要直接删除或覆盖，先在 migration-roadmap.md 中记录实际路径并等待人工确认。
 
 项目位置：
 - Java 项目：<JAVA_PROJECT_ROOT>
@@ -234,7 +321,14 @@ GORM 实现约束：
 - Java 基线 commit：<JAVA_BASELINE_COMMIT>
 
 当前批次：
-<CURRENT_BATCH>
+- 批次 ID：<CURRENT_BATCH>
+- 批次目标：<CURRENT_BATCH_GOAL>
+- Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
+- Go target scope：<CURRENT_BATCH_GO_SCOPE>
+- 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
+- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p3-b01-infra-interceptor-design.md、p3-b01-infra-interceptor-plan.md。
+- 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
 
 阶段目标：
 - 迁移被多个业务模块共同依赖的横切能力。
@@ -288,12 +382,28 @@ GORM 实现约束：
 当前只执行 Java -> Go 重构的阶段 4：并发与生命周期迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
 
+阶段标签：
+- 阶段标签：stage-4-runtime-lifecycle
+- 批次前缀：P4-BNN
+- Superpowers 文件名标签：p4-bNN-runtime-<domain>
+
 开始前请完整阅读：
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - 上一阶段交接：<PREVIOUS_STAGE_HANDOFF>
 
+阶段前置条件：
+- 阶段 3 横切基础设施迁移必须已完成全部批次，并生成 phase-3-handoff.md。
+- 如果阶段 3 只有部分批次完成，不得提前启动阶段 4。
+- 当前阶段只迁移并发、调度、线程池、策略和生命周期模型，不回头补做 ORM、API 或横切基础设施批次。
+
 所有自定义迁移治理文档必须严格遵循治理模板，不得省略必填字段，不得覆盖无关历史记录。
+
+文档输出位置要求：
+- Superpowers specs 输出到：<GO_PROJECT_ROOT>/spec/superpowers/specs/
+- Superpowers plans 输出到：<GO_PROJECT_ROOT>/spec/superpowers/plans/
+- 自定义迁移治理文档输出到：<GO_PROJECT_ROOT>/spec/migration/
+- 如果 Superpowers 因默认行为生成到 docs/superpowers/，不要直接删除或覆盖，先在 migration-roadmap.md 中记录实际路径并等待人工确认。
 
 项目位置：
 - Java 项目：<JAVA_PROJECT_ROOT>
@@ -301,7 +411,14 @@ GORM 实现约束：
 - Java 基线 commit：<JAVA_BASELINE_COMMIT>
 
 当前批次：
-<CURRENT_BATCH>
+- 批次 ID：<CURRENT_BATCH>
+- 批次目标：<CURRENT_BATCH_GOAL>
+- Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
+- Go target scope：<CURRENT_BATCH_GO_SCOPE>
+- 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
+- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p4-b01-runtime-scheduler-design.md、p4-b01-runtime-scheduler-plan.md。
+- 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
 
 阶段目标：
 - 将 Java Scheduler、Thread、ThreadPool、Strategy 和容器生命周期迁移为可控制、可关闭、可验证的 Go 运行时模型。
@@ -356,12 +473,28 @@ GORM 实现约束：
 当前只执行 Java -> Go 重构的阶段 5：Service 业务层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
 
+阶段标签：
+- 阶段标签：stage-5-service
+- 批次前缀：P5-BNN
+- Superpowers 文件名标签：p5-bNN-service-<domain>
+
 开始前请完整阅读：
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
 - 上一阶段交接：<PREVIOUS_STAGE_HANDOFF>
 
+阶段前置条件：
+- 阶段 1-4 必须已完成全部批次，并分别生成 phase-1 到 phase-4 handoff。
+- 如果阶段 4 只有部分批次完成，不得提前启动阶段 5。
+- 当前阶段只实现 Service 业务链路，不回头补做 ORM、API、横切基础设施或运行时模型批次。
+
 所有自定义迁移治理文档必须严格遵循治理模板，不得省略必填字段，不得覆盖无关历史记录。
+
+文档输出位置要求：
+- Superpowers specs 输出到：<GO_PROJECT_ROOT>/spec/superpowers/specs/
+- Superpowers plans 输出到：<GO_PROJECT_ROOT>/spec/superpowers/plans/
+- 自定义迁移治理文档输出到：<GO_PROJECT_ROOT>/spec/migration/
+- 如果 Superpowers 因默认行为生成到 docs/superpowers/，不要直接删除或覆盖，先在 migration-roadmap.md 中记录实际路径并等待人工确认。
 
 项目位置：
 - Java 项目：<JAVA_PROJECT_ROOT>
@@ -369,7 +502,14 @@ GORM 实现约束：
 - Java 基线 commit：<JAVA_BASELINE_COMMIT>
 
 当前批次：
-<CURRENT_BATCH>
+- 批次 ID：<CURRENT_BATCH>
+- 批次目标：<CURRENT_BATCH_GOAL>
+- Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
+- Go target scope：<CURRENT_BATCH_GO_SCOPE>
+- 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
+- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p5-b01-service-kv-design.md、p5-b01-service-kv-plan.md。
+- 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
 
 阶段目标：
 - 实现真实 Service 业务逻辑。
@@ -426,6 +566,11 @@ GORM 实现约束：
 当前只执行 Java -> Go 重构的阶段 6：系统级功能校验。
 当前阶段只进行验证方案分析，不立即修改代码。
 
+阶段标签：
+- 阶段标签：stage-6-verification
+- 批次前缀：P6-BNN
+- Superpowers 文件名标签：p6-bNN-verification-<domain>
+
 开始前请完整阅读：
 - 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
 - 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
@@ -434,7 +579,18 @@ GORM 实现约束：
 - migration-gaps.md
 - migration-traceability.md
 
+阶段前置条件：
+- 阶段 1-5 必须已完成全部批次，并分别生成 phase-1 到 phase-5 handoff。
+- 如果阶段 5 只有部分业务批次完成，不得提前启动阶段 6。
+- 当前阶段只做系统级功能校验和差异分类，不隐式重写阶段 1-5 的核心设计。
+
 所有自定义迁移治理文档必须严格遵循治理模板，不得省略必填字段，不得覆盖无关历史记录。
+
+文档输出位置要求：
+- Superpowers specs 输出到：<GO_PROJECT_ROOT>/spec/superpowers/specs/
+- Superpowers plans 输出到：<GO_PROJECT_ROOT>/spec/superpowers/plans/
+- 自定义迁移治理文档输出到：<GO_PROJECT_ROOT>/spec/migration/
+- 如果 Superpowers 因默认行为生成到 docs/superpowers/，不要直接删除或覆盖，先在 migration-roadmap.md 中记录实际路径并等待人工确认。
 
 项目位置：
 - Java 项目：<JAVA_PROJECT_ROOT>
@@ -442,7 +598,14 @@ GORM 实现约束：
 - Java 基线 commit：<JAVA_BASELINE_COMMIT>
 
 当前校验批次：
-<CURRENT_BATCH>
+- 批次 ID：<CURRENT_BATCH>
+- 批次目标：<CURRENT_BATCH_GOAL>
+- Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
+- Go target scope：<CURRENT_BATCH_GO_SCOPE>
+- 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
+- Superpowers spec/plan 文件名必须包含批次 ID 和简短领域名，例如 p6-b01-verification-kv-design.md、p6-b01-verification-kv-plan.md。
+- 当前批次只能验证 Java source scope 和 Go target scope 内的功能；不得隐式扩大到未声明范围。
 
 阶段目标：
 - 从系统和外部调用方视角验证 Java 与 Go 的功能和行为是否一致。
@@ -502,6 +665,9 @@ GORM 实现约束：
 7. 是否定义阶段测试和完成条件？
 8. 是否识别风险、假设和 GAP？
 9. 是否避免提前实现后续阶段？
+10. 是否明确当前批次 ID、Java source scope、Go target scope 和前序批次参考？
+11. 是否确认当前批次不会覆盖前序批次 specs/plans 或已验收代码？
+12. 是否确认只有阶段最后一个批次完成后才生成 phase-N-handoff.md？
 ```
 
 ---
@@ -515,16 +681,30 @@ GORM 实现约束：
 
 请显式调用并遵循 Superpowers 的 writing-plans skill，将已确认方案转换为可执行计划。不要使用普通任务列表替代该 skill 的计划流程。
 
+当前只为一个批次生成计划：
+- 批次 ID：<CURRENT_BATCH>
+- 批次目标：<CURRENT_BATCH_GOAL>
+- Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
+- Go target scope：<CURRENT_BATCH_GO_SCOPE>
+- 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+
+继续遵守：
+- 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
+- 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
+- Superpowers plans 输出到：<GO_PROJECT_ROOT>/spec/superpowers/plans/
+- 自定义迁移治理文档输出到：<GO_PROJECT_ROOT>/spec/migration/
+
 要求：
-- 只规划当前阶段。
-- 按可独立验证的批次拆分任务。
+- 只规划当前批次，不规划当前阶段的其他批次。
+- 不规划后续阶段实现。
+- 如果发现当前 scope 仍然过大，只提出进一步拆分建议，不在本次计划中扩大范围。
 - 每个任务明确输入、输出、允许修改范围、禁止修改范围和验收标准。
 - 每个任务包含 Java/Go 文件和关键符号溯源要求。
 - 如果当前阶段涉及 ORM / Repository，必须把 GORM 实现约束写入计划任务和验收标准。
 - 所有自定义治理文档必须遵循 migration-governance-templates.md。
 - 每个批次完成后更新 migration-traceability.md。
-- 阶段结束时更新 migration-decisions.md、migration-gaps.md 并生成 handoff.md。
-- 不要规划后续阶段实现。
+- 批次结束时更新 migration-roadmap.md、migration-decisions.md、migration-gaps.md。
+- 只有 <IS_FINAL_BATCH_OF_PHASE> 为“是”且本阶段所有批次都通过 Review 时，才规划生成 phase-N-handoff.md。
 ```
 
 ### 9.2 执行当前阶段计划
@@ -534,10 +714,24 @@ GORM 实现约束：
 
 请显式调用并遵循 Superpowers 的 subagent-driven-development 和 test-driven-development skills，不要只在文字中声称使用了这些流程。
 
+当前只执行一个批次：
+- 批次 ID：<CURRENT_BATCH>
+- Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
+- Go target scope：<CURRENT_BATCH_GO_SCOPE>
+- 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+
+继续遵守：
+- 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
+- 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
+- 当前阶段计划文档必须来自：<GO_PROJECT_ROOT>/spec/superpowers/plans/
+- 自定义迁移治理文档输出到：<GO_PROJECT_ROOT>/spec/migration/
+
 要求：
-- 一次只执行一个已规划任务或批次。
+- 只执行当前批次计划。
 - 先验证或编写测试，再实现代码。
 - 不得超出当前阶段范围。
+- 不得超出当前批次 Java source scope 和 Go target scope。
+- 不得修改前序批次已验收成果，除非记录 Decision/GAP、影响范围和重新验证结果。
 - 不得并行修改同一文件。
 - 如果当前阶段涉及 ORM / Repository，必须使用 GORM，并遵守静态 SQL 使用 Raw / Exec / Scan、动态 SQL 使用 GORM 条件构造、禁止 AutoMigrate、禁止依赖隐式 CRUD。
 - 每个 Go 文件和关键符号必须标注 Java 来源。
@@ -549,12 +743,27 @@ GORM 实现约束：
 ### 9.3 阶段 Review 和完成验证
 
 ```text
-当前阶段实现任务已经完成。
+当前批次实现任务已经完成。
 
 请显式调用并遵循 Superpowers 的 requesting-code-review 和 verification-before-completion skills，不要跳过 review 或仅以摘要代替验证。
 
+当前 Review 类型：
+- 批次 ID：<CURRENT_BATCH>
+- 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
+- Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
+- Go target scope：<CURRENT_BATCH_GO_SCOPE>
+- 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+
+继续遵守：
+- 主线文档：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-mainline.md
+- 治理模板：/Users/baoxiaomin/project_code/vibe_prj/plan/migration-governance-templates.md
+- Superpowers specs/plans 位置：<GO_PROJECT_ROOT>/spec/superpowers/
+- 自定义迁移治理文档位置：<GO_PROJECT_ROOT>/spec/migration/
+
 检查：
 - 是否符合当前阶段范围和非目标。
+- 是否只覆盖当前批次 scope，没有顺手迁移其他批次或后续阶段。
+- 是否覆盖当前批次对应的 Java 文件、Java 符号、Go 文件、Go 关键符号和测试。
 - Java/Go 行为是否完成阶段性对齐。
 - 如果当前阶段涉及 ORM / Repository，是否遵守 GORM 实现约束，包括静态 SQL、动态 SQL、AutoMigrate、隐式 CRUD、SQL 常量和 GAP 记录。
 - 测试和验证是否通过。
@@ -564,5 +773,15 @@ GORM 实现约束：
 - migration-decisions.md 和 migration-gaps.md 是否更新。
 - 是否存在未解决的阻塞问题。
 
-只有全部阶段门禁通过后，才生成当前阶段 handoff.md，并明确下一阶段可以依赖的稳定成果。
+如果 <IS_FINAL_BATCH_OF_PHASE> 为“否”：
+- 只做批次 Review。
+- 更新 migration-roadmap.md、migration-traceability.md、migration-decisions.md、migration-gaps.md。
+- 不生成 phase-N-handoff.md。
+- 明确下一批次需要读取的前序批次参考。
+
+如果 <IS_FINAL_BATCH_OF_PHASE> 为“是”：
+- 对本阶段所有批次执行阶段级完整性检查。
+- 确认本阶段所有批次的测试、Review、traceability、Decision、GAP 都已闭环。
+- 只有全部阶段门禁通过后，才生成当前阶段 phase-N-handoff.md。
+- handoff 中必须明确下一阶段可以依赖的稳定成果和不得依赖的 GAP。
 ```

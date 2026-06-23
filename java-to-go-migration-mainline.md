@@ -33,6 +33,38 @@
 
 六个阶段分别执行，不在同一次任务中完成整个项目重构。
 
+### 2.1 阶段提示词索引和标签
+
+阶段启动提示词的唯一来源是：
+
+```text
+/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-stage-prompts.md
+```
+
+`java-to-go-migration-mainline.md` 只定义主线、阶段边界和全局规则，不复制阶段提示词全文。执行阶段任务时，Agent 必须回到 `java-to-go-migration-stage-prompts.md` 选择对应阶段和批次提示词。
+
+| 阶段 | 阶段标签 | 批次前缀 | Superpowers 文件名标签 | 阶段提示词位置 |
+|---|---|---|---|---|
+| 阶段 1：持久化层迁移 | `stage-1-persistence` | `P1-BNN` | `p1-bNN-orm-<domain>` | `java-to-go-migration-stage-prompts.md#阶段-1持久化层迁移` |
+| 阶段 2：API 契约层迁移 | `stage-2-api-contract` | `P2-BNN` | `p2-bNN-api-<domain>` | `java-to-go-migration-stage-prompts.md#阶段-2api-契约层迁移` |
+| 阶段 3：横切基础设施迁移 | `stage-3-infrastructure` | `P3-BNN` | `p3-bNN-infra-<domain>` | `java-to-go-migration-stage-prompts.md#阶段-3横切基础设施迁移` |
+| 阶段 4：并发与生命周期迁移 | `stage-4-runtime-lifecycle` | `P4-BNN` | `p4-bNN-runtime-<domain>` | `java-to-go-migration-stage-prompts.md#阶段-4并发与生命周期迁移` |
+| 阶段 5：Service 业务层迁移 | `stage-5-service` | `P5-BNN` | `p5-bNN-service-<domain>` | `java-to-go-migration-stage-prompts.md#阶段-5service-业务层迁移` |
+| 阶段 6：系统级功能校验 | `stage-6-verification` | `P6-BNN` | `p6-bNN-verification-<domain>` | `java-to-go-migration-stage-prompts.md#阶段-6系统级功能校验` |
+
+所有 Superpowers spec / plan 文件名必须包含：
+
+- 阶段编号
+- 批次 ID
+- 能力域标签
+
+示例：
+
+```text
+spec/superpowers/specs/YYYY-MM-DD-p1-b01-orm-kv-design.md
+spec/superpowers/plans/YYYY-MM-DD-p1-b01-orm-kv-plan.md
+```
+
 ## 3. 全局原则
 
 ### 3.1 Java 源码是最终事实
@@ -209,9 +241,9 @@ migration-traceability.md
 
 表格模板：
 
-| 阶段 | Java contentPath | Java 已迁移符号 | Go contentPath | 映射类型 | 状态 | 验证结果 | GAP/备注 |
-|---|---|---|---|---|---|---|---|
-| 阶段 1 | `bic-service/src/.../FooMapper.java` | `selectFoo` | `internal/.../foo_repository.go` | 1:1 | 已迁移 | 测试通过 | 无 |
+| 阶段 | 批次 | Java contentPath | Java 已迁移符号 | Go contentPath | 映射类型 | 状态 | 验证结果 | GAP/备注 |
+|---|---|---|---|---|---|---|---|---|
+| 阶段 1 | `P1-B01` | `bic-service/src/.../FooMapper.java` | `selectFoo` | `internal/.../foo_repository.go` | 1:1 | 已迁移 | 测试通过 | 无 |
 
 映射类型：
 
@@ -242,6 +274,26 @@ GAP
 - 新增或修改的 Java 代码是否尚未同步
 
 为保证增量核验可靠，映射表还应在阶段标题或元数据中记录本次分析使用的 Java 基线 commit SHA。
+
+### 3.10 批次隔离
+
+同一阶段可以拆成多个批次执行，降低人工检查压力。例如阶段 1 持久化层可以按 Java 源码路径、Mapper 分组或业务表分为 `P1-B01`、`P1-B02`。
+
+每个批次必须具备唯一批次 ID，并明确：
+
+- 当前批次目标
+- 当前批次 Java source scope
+- 当前批次 Go target scope
+- 当前批次非目标
+- 当前批次 Superpowers spec / plan 输出路径
+
+批次执行原则：
+
+- 当前批次只处理本批次 source scope，不顺手迁移范围外代码。
+- 当前批次可以读取前序批次文档和代码，但不得覆盖前序批次 Superpowers specs/plans。
+- 当前批次如果需要修改前序批次已验收代码，必须记录影响批次、修改原因和重新验证结果。
+- 每个批次完成后增量更新 `migration-roadmap.md`、`migration-traceability.md`、`migration-decisions.md` 和 `migration-gaps.md`。
+- `phase-N-handoff.md` 只在整个阶段完成后生成；不要每个批次都生成阶段 handoff。
 
 ## 4. 阶段 1：持久化层迁移
 
