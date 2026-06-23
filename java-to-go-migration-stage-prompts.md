@@ -94,6 +94,20 @@ phase-N-handoff.md
 - 数据库错误转换
 - 持久化层测试
 
+GORM 实现约束：
+- 本阶段 Go ORM / Repository 默认使用 GORM。
+- 必须先根据 Java MyBatis SQL 判断 SQL 类型，再决定 Go 侧实现方式。
+- 如果 MyBatis 中是静态 SQL，Go 中使用 GORM Raw / Exec / Scan，并保留静态 SQL 常量。
+- 如果 MyBatis 中是动态 SQL，例如 `<if>`、`<where>`、`<foreach>`、条件拼接、方言分支等，Go 中按 GORM 动态查询方式重构。
+- 动态 SQL 重构时必须保持 MyBatis 的条件启用规则、默认值、排序、空值处理和返回行为一致。
+- GORM 可以用于连接管理、事务、Raw / Exec / Scan、动态 Where / Clauses 构造和 SQL 日志。
+- 不要使用 AutoMigrate。
+- 不要依赖 GORM 隐式 CRUD 实现行为敏感方法。
+- 静态 SQL 必须以常量形式保留，方便和 Java MyBatis SQL 对照。
+- 动态 SQL 必须在 contract 或 migration-decisions.md 中记录 MyBatis 动态条件与 Go GORM 条件构造的对应关系。
+- 优先支持 PostgreSQL。
+- SQL Server / 达梦数据库的差异如果暂不实现，需要标记为 GAP。
+
 当前阶段明确不做：
 - HTTP Router 和 Handler
 - 真实 Service 业务实现
@@ -116,10 +130,11 @@ phase-N-handoff.md
 3. 建议的迁移批次划分。
 4. Java Entity/Mapper 到 Go Model/Repository 的映射策略。
 5. 静态 SQL、动态 SQL、事务和数据库方言的处理原则。
-6. 阶段测试和行为对齐方案。
-7. 主要风险、假设和 GAP。
-8. 阶段完成条件。
-9. writing-plans 阶段应拆分的任务类型。
+6. GORM 实现规则，包括静态 SQL 使用 Raw / Exec / Scan、动态 SQL 使用 GORM 条件构造、禁止 AutoMigrate、禁止依赖隐式 CRUD。
+7. 阶段测试和行为对齐方案。
+8. 主要风险、假设和 GAP。
+9. 阶段完成条件。
+10. writing-plans 阶段应拆分的任务类型。
 
 不要开始实现。等待我确认 brainstorming 结果后再进入 writing-plans。
 ```
@@ -505,6 +520,7 @@ phase-N-handoff.md
 - 按可独立验证的批次拆分任务。
 - 每个任务明确输入、输出、允许修改范围、禁止修改范围和验收标准。
 - 每个任务包含 Java/Go 文件和关键符号溯源要求。
+- 如果当前阶段涉及 ORM / Repository，必须把 GORM 实现约束写入计划任务和验收标准。
 - 所有自定义治理文档必须遵循 migration-governance-templates.md。
 - 每个批次完成后更新 migration-traceability.md。
 - 阶段结束时更新 migration-decisions.md、migration-gaps.md 并生成 handoff.md。
@@ -523,6 +539,7 @@ phase-N-handoff.md
 - 先验证或编写测试，再实现代码。
 - 不得超出当前阶段范围。
 - 不得并行修改同一文件。
+- 如果当前阶段涉及 ORM / Repository，必须使用 GORM，并遵守静态 SQL 使用 Raw / Exec / Scan、动态 SQL 使用 GORM 条件构造、禁止 AutoMigrate、禁止依赖隐式 CRUD。
 - 每个 Go 文件和关键符号必须标注 Java 来源。
 - 所有自定义治理文档必须遵循 migration-governance-templates.md，只做增量更新，不覆盖历史记录。
 - 每完成一个批次更新 migration-traceability.md、决策和 GAP。
@@ -539,6 +556,7 @@ phase-N-handoff.md
 检查：
 - 是否符合当前阶段范围和非目标。
 - Java/Go 行为是否完成阶段性对齐。
+- 如果当前阶段涉及 ORM / Repository，是否遵守 GORM 实现约束，包括静态 SQL、动态 SQL、AutoMigrate、隐式 CRUD、SQL 常量和 GAP 记录。
 - 测试和验证是否通过。
 - Go 文件头和关键符号是否标注 Java 来源。
 - 自定义治理文档是否符合 migration-governance-templates.md。
