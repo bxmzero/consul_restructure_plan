@@ -11,6 +11,22 @@
 ## 1. 阶段 1：持久化层迁移
 
 ```text
+本次输入值：
+JAVA_PROJECT_ROOT = <填写 Java 项目根目录>
+GO_PROJECT_ROOT = <填写 Go 项目根目录>
+JAVA_BASELINE_COMMIT = <填写 Java 基线 commit>
+CURRENT_BATCH = <填写当前批次 ID，例如 P1-orm-01>
+CURRENT_BATCH_GOAL = <填写当前批次目标>
+CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
+CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+IS_FINAL_BATCH_OF_PHASE = <是 / 否>
+PREVIOUS_STAGE_HANDOFF = <无 / 上一阶段 handoff 路径>
+
+说明：
+- 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
+- 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
+
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
 
 当前只执行 Java -> Go 重构的阶段 1：持久化层迁移。
@@ -109,6 +125,22 @@ GORM 实现约束：
 ## 2. 阶段 2：API 契约层迁移
 
 ```text
+本次输入值：
+JAVA_PROJECT_ROOT = <填写 Java 项目根目录>
+GO_PROJECT_ROOT = <填写 Go 项目根目录>
+JAVA_BASELINE_COMMIT = <填写 Java 基线 commit>
+CURRENT_BATCH = <填写当前批次 ID，例如 P2-api-01>
+CURRENT_BATCH_GOAL = <填写当前批次目标>
+CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
+CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+IS_FINAL_BATCH_OF_PHASE = <是 / 否>
+PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
+
+说明：
+- 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
+- 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
+
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
 
 当前只执行 Java -> Go 重构的阶段 2：API 契约层迁移。
@@ -200,6 +232,22 @@ GORM 实现约束：
 ## 3. 阶段 3：横切基础设施迁移
 
 ```text
+本次输入值：
+JAVA_PROJECT_ROOT = <填写 Java 项目根目录>
+GO_PROJECT_ROOT = <填写 Go 项目根目录>
+JAVA_BASELINE_COMMIT = <填写 Java 基线 commit>
+CURRENT_BATCH = <填写当前批次 ID，例如 P3-infra-01>
+CURRENT_BATCH_GOAL = <填写当前批次目标>
+CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
+CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+IS_FINAL_BATCH_OF_PHASE = <是 / 否>
+PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
+
+说明：
+- 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
+- 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
+
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
 
 当前只执行 Java -> Go 重构的阶段 3：横切基础设施迁移。
@@ -286,6 +334,22 @@ GORM 实现约束：
 ## 4. 阶段 4：并发与生命周期迁移
 
 ```text
+本次输入值：
+JAVA_PROJECT_ROOT = <填写 Java 项目根目录>
+GO_PROJECT_ROOT = <填写 Go 项目根目录>
+JAVA_BASELINE_COMMIT = <填写 Java 基线 commit>
+CURRENT_BATCH = <填写当前批次 ID，例如 P4-runtime-01>
+CURRENT_BATCH_GOAL = <填写当前批次目标>
+CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
+CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+IS_FINAL_BATCH_OF_PHASE = <是 / 否>
+PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
+
+说明：
+- 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
+- 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
+
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
 
 当前只执行 Java -> Go 重构的阶段 4：并发与生命周期迁移。
@@ -373,6 +437,22 @@ GORM 实现约束：
 ## 5. 阶段 5：Service 业务层迁移
 
 ```text
+本次输入值：
+JAVA_PROJECT_ROOT = <填写 Java 项目根目录>
+GO_PROJECT_ROOT = <填写 Go 项目根目录>
+JAVA_BASELINE_COMMIT = <填写 Java 基线 commit>
+CURRENT_BATCH = <填写当前批次 ID，例如 P5-service-01>
+CURRENT_BATCH_GOAL = <填写当前批次目标>
+CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
+CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+IS_FINAL_BATCH_OF_PHASE = <是 / 否>
+PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
+
+说明：
+- 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
+- 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
+
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
 
 当前只执行 Java -> Go 重构的阶段 5：Service 业务层迁移。
@@ -462,6 +542,22 @@ GORM 实现约束：
 ## 6. 阶段 6：系统级功能校验
 
 ```text
+本次输入值：
+JAVA_PROJECT_ROOT = <填写 Java 项目根目录>
+GO_PROJECT_ROOT = <填写 Go 项目根目录>
+JAVA_BASELINE_COMMIT = <填写 Java 基线 commit>
+CURRENT_BATCH = <填写当前批次 ID，例如 P6-verify-01>
+CURRENT_BATCH_GOAL = <填写当前批次目标>
+CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
+CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
+PREVIOUS_BATCH_REFERENCES = <前序批次 spec、plan、traceability、decision、gap>
+IS_FINAL_BATCH_OF_PHASE = <是 / 否>
+PREVIOUS_STAGE_HANDOFF = <阶段 1-5 handoff 路径>
+
+说明：
+- 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
+- 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
+
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
 
 当前只执行 Java -> Go 重构的阶段 6：系统级功能校验。
@@ -553,6 +649,20 @@ GORM 实现约束：
 ### 7.1 生成当前批次计划
 
 ```text
+本次输入值：
+JAVA_PROJECT_ROOT = <填写 Java 项目根目录>
+GO_PROJECT_ROOT = <填写 Go 项目根目录>
+CURRENT_BATCH = <填写当前批次 ID>
+CURRENT_BATCH_GOAL = <填写当前批次目标>
+CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
+CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+IS_FINAL_BATCH_OF_PHASE = <是 / 否>
+
+说明：
+- 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
+- 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
+
 我已确认当前阶段的 brainstorming 结果。
 
 请显式调用并遵循 Superpowers 的 writing-plans skill，将已确认方案转换为可执行计划。不要使用普通任务列表替代该 skill 的计划流程。
@@ -587,6 +697,18 @@ GORM 实现约束：
 ### 7.2 执行当前批次计划
 
 ```text
+本次输入值：
+JAVA_PROJECT_ROOT = <填写 Java 项目根目录>
+GO_PROJECT_ROOT = <填写 Go 项目根目录>
+CURRENT_BATCH = <填写当前批次 ID>
+CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
+CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+
+说明：
+- 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
+- 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
+
 请按照已确认的当前阶段计划执行。
 
 请显式调用并遵循 Superpowers 的 subagent-driven-development 和 test-driven-development skills，不要只在文字中声称使用了这些流程。
@@ -621,6 +743,19 @@ GORM 实现约束：
 ### 7.3 批次 Review 和完成验证
 
 ```text
+本次输入值：
+JAVA_PROJECT_ROOT = <填写 Java 项目根目录>
+GO_PROJECT_ROOT = <填写 Go 项目根目录>
+CURRENT_BATCH = <填写当前批次 ID>
+CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
+CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+IS_FINAL_BATCH_OF_PHASE = <是 / 否>
+
+说明：
+- 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
+- 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
+
 当前批次实现任务已经完成。
 
 请显式调用并遵循 Superpowers 的 requesting-code-review 和 verification-before-completion skills，不要跳过 review 或仅以摘要代替验证。

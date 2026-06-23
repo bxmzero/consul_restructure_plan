@@ -149,6 +149,8 @@ Superpowers 产物：
 <PREVIOUS_STAGE_HANDOFF>
 ```
 
+`java-to-go-migration-stage-prompts.md` 中每段提示词开头都有“本次输入值”块。实际使用时，只需要填写这个输入值块；正文里重复出现的 `<...>` 占位符由 Agent 按输入值块解析，不需要逐个替换。
+
 填写范本见：
 
 ```text
