@@ -28,6 +28,9 @@ PREVIOUS_STAGE_HANDOFF = <无 / 上一阶段 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
+请直接输出完整 brainstorming 结果，不要逐章节请求确认。
+只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
+brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 1：持久化层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
@@ -117,7 +120,7 @@ GORM 实现约束：
 9. 阶段完成条件。
 10. writing-plans 阶段应拆分的任务类型。
 
-不要开始实现。等待我确认 brainstorming 结果后再进入 writing-plans。
+不要开始实现。完整输出 brainstorming 结果后，等待我进行一次最终确认，再进入 writing-plans。
 ```
 
 ---
@@ -142,6 +145,9 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
+请直接输出完整 brainstorming 结果，不要逐章节请求确认。
+只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
+brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 2：API 契约层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
@@ -224,7 +230,7 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 8. 主要风险、假设和 GAP。
 9. 阶段完成条件。
 
-不要开始实现。等待我确认 brainstorming 结果后再进入 writing-plans。
+不要开始实现。完整输出 brainstorming 结果后，等待我进行一次最终确认，再进入 writing-plans。
 ```
 
 ---
@@ -249,6 +255,9 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
+请直接输出完整 brainstorming 结果，不要逐章节请求确认。
+只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
+brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 3：横切基础设施迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
@@ -326,7 +335,7 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 7. 主要风险、假设和 GAP。
 8. 阶段完成条件。
 
-不要开始实现。等待我确认 brainstorming 结果后再进入 writing-plans。
+不要开始实现。完整输出 brainstorming 结果后，等待我进行一次最终确认，再进入 writing-plans。
 ```
 
 ---
@@ -351,6 +360,9 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
+请直接输出完整 brainstorming 结果，不要逐章节请求确认。
+只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
+brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 4：并发与生命周期迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
@@ -429,7 +441,7 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 7. 主要风险、假设和 GAP。
 8. 阶段完成条件。
 
-不要开始实现。等待我确认 brainstorming 结果后再进入 writing-plans。
+不要开始实现。完整输出 brainstorming 结果后，等待我进行一次最终确认，再进入 writing-plans。
 ```
 
 ---
@@ -454,6 +466,9 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
+请直接输出完整 brainstorming 结果，不要逐章节请求确认。
+只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
+brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 5：Service 业务层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
@@ -534,7 +549,7 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 8. 主要风险、假设和 GAP。
 9. 阶段完成条件。
 
-不要开始实现。等待我确认 brainstorming 结果后再进入 writing-plans。
+不要开始实现。完整输出 brainstorming 结果后，等待我进行一次最终确认，再进入 writing-plans。
 ```
 
 ---
@@ -559,6 +574,9 @@ PREVIOUS_STAGE_HANDOFF = <阶段 1-5 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
+请直接输出完整 brainstorming 结果，不要逐章节请求确认。
+只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
+brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 6：系统级功能校验。
 当前阶段只进行验证方案分析，不立即修改代码。
@@ -639,7 +657,7 @@ PREVIOUS_STAGE_HANDOFF = <阶段 1-5 handoff 路径>
 8. 主要风险、假设和剩余 GAP。
 9. 最终验收报告结构。
 
-不要立即修改代码。等待我确认验证方案后再进入 writing-plans。
+不要立即修改代码。完整输出验证方案后，等待我进行一次最终确认，再进入 writing-plans。
 ```
 
 ---
