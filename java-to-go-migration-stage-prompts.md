@@ -19,7 +19,7 @@ CURRENT_BATCH = <填写当前批次 ID，例如 P1-orm-01>
 CURRENT_BATCH_GOAL = <填写当前批次目标>
 CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
-PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <无 / 上一阶段 handoff 路径>
 
@@ -28,9 +28,9 @@ PREVIOUS_STAGE_HANDOFF = <无 / 上一阶段 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
-请直接输出完整 brainstorming 结果，不要逐章节请求确认。
-只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
-brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
+请按章节或主题逐步输出 brainstorming 结果，每完成一个章节后暂停，请我确认该章节是否正确、是否需要补充或修改。
+如果缺少关键输入、阶段范围冲突、Java source scope 不明确，也需要暂停向我提问。
+全部章节确认完成后，等待我明确确认进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 1：持久化层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
@@ -72,6 +72,7 @@ brainstorming 完成后，只等待我进行一次最终确认，再进入 writi
 - Java Entity
 - MyBatis Mapper
 - 静态 SQL、动态 SQL和数据库方言
+- MyBatis Example / Criteria / Criterion 在业务代码中的实际调用点和查询语义
 - Go 持久化 Model
 - Go ORM / Repository
 - 事务基础能力
@@ -80,6 +81,12 @@ brainstorming 完成后，只等待我进行一次最终确认，再进入 writi
 
 GORM 实现约束：
 - 本阶段 Go ORM / Repository 默认使用 GORM。
+- 所有新生成的 Go Repository 不直接注入或持有裸 `*gorm.DB`，必须通过项目已有的 `txmanager.Manager` 注入来获取 DB。
+- Repository 构造函数应接收 `txmanager.Manager`，Repository struct 内保存 `txmanager.Manager`，普通查询和写入统一通过 `manager.DB(ctx)` 获取 `*gorm.DB`。
+- Repository 内不得调用 `gorm.Open`，不得使用全局 DB，除测试 fixture 外不得绕过 `txmanager.Manager` 直接创建数据库连接。
+- 需要事务包裹的多步 Repository 操作，必须通过 `manager.WithinTransaction(ctx, func(txCtx context.Context) error { ... })` 执行，并在事务内部继续把 `txCtx` 传给 Repository 方法或 `manager.DB(txCtx)`。
+- 如果上层已经通过 `WithinTransaction` 传入事务上下文，`manager.DB(ctx)` 必须复用上下文中的事务 DB；Repository 不要自行判断并手动嵌套事务。
+- `manager.Current(ctx)` 只用于确有必要的事务状态判断；普通查询和写入默认使用 `manager.DB(ctx)`。
 - 必须先根据 Java MyBatis SQL 判断 SQL 类型，再决定 Go 侧实现方式。
 - 如果 MyBatis 中是静态 SQL，Go 中使用 GORM Raw / Exec / Scan，并保留静态 SQL 常量。
 - 如果 MyBatis 中是动态 SQL，例如 `<if>`、`<where>`、`<foreach>`、条件拼接、方言分支等，Go 中按 GORM 动态查询方式重构。
@@ -89,12 +96,18 @@ GORM 实现约束：
 - 不要依赖 GORM 隐式 CRUD 实现行为敏感方法。
 - 静态 SQL 必须以常量形式保留，方便和 Java MyBatis SQL 对照。
 - 动态 SQL 必须在 contract 或 migration-decisions.md 中记录 MyBatis 动态条件与 Go GORM 条件构造的对应关系。
+- MyBatis Example / Criteria / Criterion 不直接翻译为 Go `XxxExample` DSL。
+- 只要业务代码中使用 MyBatis Example，不论使用点在 Service、Controller、Scheduler、Interceptor、Cache、Notify、生命周期任务或其他层，都必须读取该调用点，提取实际查询条件、AND / OR 分组、排序、分页、distinct、NULL 规则和最终 Mapper 调用。
+- Go 侧使用 Repository 语义化方法或 Repository QueryFilter 承接这些查询意图，由 Repository 内部使用 GORM Where / Or / Scopes / Clauses / Order / Limit / Offset 动态构造 SQL。
+- Service、Handler、Scheduler、Interceptor 等业务层不得直接持有或拼装 `*gorm.DB`。
+- 如果某个 Example 没有找到业务调用点，不臆造完整实现，标记为 GAP。
 - 优先支持 PostgreSQL。
 - SQL Server / 达梦数据库的差异如果暂不实现，需要标记为 GAP。
 
 当前阶段明确不做：
 - HTTP Router 和 Handler
 - 真实 Service 业务实现
+- Example 调用点所在业务链路的完整迁移；当前只允许只读分析调用点，用于恢复查询语义
 - Cache
 - Scheduler
 - Thread / ThreadPool
@@ -113,14 +126,14 @@ GORM 实现约束：
 2. Java 持久化文件清单和依赖关系。
 3. 建议的迁移批次划分。
 4. Java Entity/Mapper 到 Go Model/Repository 的映射策略。
-5. 静态 SQL、动态 SQL、事务和数据库方言的处理原则。
-6. GORM 实现规则，包括静态 SQL 使用 Raw / Exec / Scan、动态 SQL 使用 GORM 条件构造、禁止 AutoMigrate、禁止依赖隐式 CRUD。
+5. 静态 SQL、动态 SQL、MyBatis Example 实际调用点、事务和数据库方言的处理原则。
+6. GORM 实现规则，包括 Repository 通过 `txmanager.Manager` 注入获取 DB、静态 SQL 使用 Raw / Exec / Scan、动态 SQL 使用 GORM 条件构造、Example 不直接翻译、禁止 AutoMigrate、禁止依赖隐式 CRUD。
 7. 阶段测试和行为对齐方案。
 8. 主要风险、假设和 GAP。
 9. 阶段完成条件。
 10. writing-plans 阶段应拆分的任务类型。
 
-不要开始实现。完整输出 brainstorming 结果后，等待我进行一次最终确认，再进入 writing-plans。
+不要开始实现。按章节完成 brainstorming 并全部确认后，等待我明确确认进入 writing-plans。
 ```
 
 ---
@@ -136,7 +149,7 @@ CURRENT_BATCH = <填写当前批次 ID，例如 P2-api-01>
 CURRENT_BATCH_GOAL = <填写当前批次目标>
 CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
-PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 
@@ -145,9 +158,9 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
-请直接输出完整 brainstorming 结果，不要逐章节请求确认。
-只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
-brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
+请按章节或主题逐步输出 brainstorming 结果，每完成一个章节后暂停，请我确认该章节是否正确、是否需要补充或修改。
+如果缺少关键输入、阶段范围冲突、Java source scope 不明确，也需要暂停向我提问。
+全部章节确认完成后，等待我明确确认进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 2：API 契约层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
@@ -230,7 +243,7 @@ brainstorming 完成后，只等待我进行一次最终确认，再进入 writi
 8. 主要风险、假设和 GAP。
 9. 阶段完成条件。
 
-不要开始实现。完整输出 brainstorming 结果后，等待我进行一次最终确认，再进入 writing-plans。
+不要开始实现。按章节完成 brainstorming 并全部确认后，等待我明确确认进入 writing-plans。
 ```
 
 ---
@@ -246,7 +259,7 @@ CURRENT_BATCH = <填写当前批次 ID，例如 P3-infra-01>
 CURRENT_BATCH_GOAL = <填写当前批次目标>
 CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
-PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 
@@ -255,9 +268,9 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
-请直接输出完整 brainstorming 结果，不要逐章节请求确认。
-只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
-brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
+请按章节或主题逐步输出 brainstorming 结果，每完成一个章节后暂停，请我确认该章节是否正确、是否需要补充或修改。
+如果缺少关键输入、阶段范围冲突、Java source scope 不明确，也需要暂停向我提问。
+全部章节确认完成后，等待我明确确认进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 3：横切基础设施迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
@@ -335,7 +348,7 @@ brainstorming 完成后，只等待我进行一次最终确认，再进入 writi
 7. 主要风险、假设和 GAP。
 8. 阶段完成条件。
 
-不要开始实现。完整输出 brainstorming 结果后，等待我进行一次最终确认，再进入 writing-plans。
+不要开始实现。按章节完成 brainstorming 并全部确认后，等待我明确确认进入 writing-plans。
 ```
 
 ---
@@ -351,7 +364,7 @@ CURRENT_BATCH = <填写当前批次 ID，例如 P4-runtime-01>
 CURRENT_BATCH_GOAL = <填写当前批次目标>
 CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
-PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 
@@ -360,9 +373,9 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
-请直接输出完整 brainstorming 结果，不要逐章节请求确认。
-只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
-brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
+请按章节或主题逐步输出 brainstorming 结果，每完成一个章节后暂停，请我确认该章节是否正确、是否需要补充或修改。
+如果缺少关键输入、阶段范围冲突、Java source scope 不明确，也需要暂停向我提问。
+全部章节确认完成后，等待我明确确认进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 4：并发与生命周期迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
@@ -441,7 +454,7 @@ brainstorming 完成后，只等待我进行一次最终确认，再进入 writi
 7. 主要风险、假设和 GAP。
 8. 阶段完成条件。
 
-不要开始实现。完整输出 brainstorming 结果后，等待我进行一次最终确认，再进入 writing-plans。
+不要开始实现。按章节完成 brainstorming 并全部确认后，等待我明确确认进入 writing-plans。
 ```
 
 ---
@@ -457,7 +470,7 @@ CURRENT_BATCH = <填写当前批次 ID，例如 P5-service-01>
 CURRENT_BATCH_GOAL = <填写当前批次目标>
 CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
-PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 
@@ -466,9 +479,9 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
-请直接输出完整 brainstorming 结果，不要逐章节请求确认。
-只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
-brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
+请按章节或主题逐步输出 brainstorming 结果，每完成一个章节后暂停，请我确认该章节是否正确、是否需要补充或修改。
+如果缺少关键输入、阶段范围冲突、Java source scope 不明确，也需要暂停向我提问。
+全部章节确认完成后，等待我明确确认进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 5：Service 业务层迁移。
 当前阶段只进行分析和方案确认，不修改 Java 或 Go 代码。
@@ -516,6 +529,7 @@ brainstorming 完成后，只等待我进行一次最终确认，再进入 writi
 - Service Interface 的真实实现
 - 业务规则
 - 事务编排
+- `txmanager.Manager` 注入和跨 Repository 事务上下文传递
 - Repository 调用
 - Cache 调用
 - Notify 调用
@@ -536,20 +550,29 @@ brainstorming 完成后，只等待我进行一次最终确认，再进入 writi
 - 修改前置阶段契约时必须记录原因、影响并重新验证。
 - Java 业务规则和实际行为是最终事实。
 
+Service 事务管理约束：
+- 所有新生成的真实 Go Service 实现对象必须注入项目已有的 `txmanager.Manager`。
+- Service 构造函数应接收 `txmanager.Manager` 和所需 Repository / Cache / Notify / Scheduler 等依赖；Service struct 内保存 `txmanager.Manager`。
+- Service 注入 `txmanager.Manager` 的目的，是编排业务事务并把事务上下文传递给 Repository，不是让 Service 直接拼 SQL。
+- 当 Java 业务语义要求事务、或一个 Service 方法需要多个 Repository 写入/读写保持一致时，Service 必须使用 `manager.WithinTransaction(ctx, func(txCtx context.Context) error { ... })` 包裹业务操作。
+- 事务内部调用 Repository 时必须传递 `txCtx`，让 Repository 内部通过自身注入的 `txmanager.Manager` 和 `manager.DB(txCtx)` 复用事务 DB。
+- Service 不得直接调用 `manager.DB(ctx)` 拼装 GORM 查询，不得持有或操作 `*gorm.DB`，不得调用 `gorm.Open`。
+- 如果当前 Service 方法不需要事务，仍然通过普通 `ctx` 调用 Repository；Repository 自行使用 `manager.DB(ctx)` 获取 DB。
+
 必须遵守主线文档中的文件、符号和增量映射规则。
 
 请在 brainstorming 中输出：
 1. Service 业务能力和完整调用链清单。
 2. 建议的纵向业务迁移批次。
 3. Java Service 到 Go Service 的职责映射。
-4. 事务、Cache、Notify、Scheduler 和 Worker 的协作边界。
+4. `txmanager.Manager` 注入策略、事务边界、Cache、Notify、Scheduler 和 Worker 的协作边界。
 5. Stub 替换顺序。
 6. 业务规则和副作用验证方案。
 7. 与阶段 1-4 的依赖和可能影响。
 8. 主要风险、假设和 GAP。
 9. 阶段完成条件。
 
-不要开始实现。完整输出 brainstorming 结果后，等待我进行一次最终确认，再进入 writing-plans。
+不要开始实现。按章节完成 brainstorming 并全部确认后，等待我明确确认进入 writing-plans。
 ```
 
 ---
@@ -565,7 +588,7 @@ CURRENT_BATCH = <填写当前批次 ID，例如 P6-verify-01>
 CURRENT_BATCH_GOAL = <填写当前批次目标>
 CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
-PREVIOUS_BATCH_REFERENCES = <前序批次 spec、plan、traceability、decision、gap>
+PREVIOUS_BATCH_REFERENCES = <前序批次 ID，例如 P1-orm-01,P2-api-01,P3-infra-01>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <阶段 1-5 handoff 路径>
 
@@ -574,9 +597,9 @@ PREVIOUS_STAGE_HANDOFF = <阶段 1-5 handoff 路径>
 - 如果某项输入值为空或不明确，请先暂停并要求我补充，不要自行猜测。
 
 请显式调用并遵循 Superpowers 的 brainstorming skill，不要使用普通对话替代该 skill。
-请直接输出完整 brainstorming 结果，不要逐章节请求确认。
-只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向我提问。
-brainstorming 完成后，只等待我进行一次最终确认，再进入 writing-plans。
+请按章节或主题逐步输出 brainstorming 结果，每完成一个章节后暂停，请我确认该章节是否正确、是否需要补充或修改。
+如果缺少关键输入、阶段范围冲突、Java source scope 不明确，也需要暂停向我提问。
+全部章节确认完成后，等待我明确确认进入 writing-plans。
 
 当前只执行 Java -> Go 重构的阶段 6：系统级功能校验。
 当前阶段只进行验证方案分析，不立即修改代码。
@@ -657,7 +680,7 @@ brainstorming 完成后，只等待我进行一次最终确认，再进入 writi
 8. 主要风险、假设和剩余 GAP。
 9. 最终验收报告结构。
 
-不要立即修改代码。完整输出验证方案后，等待我进行一次最终确认，再进入 writing-plans。
+不要立即修改代码。按章节完成验证方案并全部确认后，等待我明确确认进入 writing-plans。
 ```
 
 ---
@@ -674,7 +697,7 @@ CURRENT_BATCH = <填写当前批次 ID>
 CURRENT_BATCH_GOAL = <填写当前批次目标>
 CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
-PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 
 说明：
@@ -706,6 +729,9 @@ IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 - 每个任务明确输入、输出、允许修改范围、禁止修改范围和验收标准。
 - 每个任务包含 Java/Go 文件和关键符号溯源要求。
 - 如果当前阶段涉及 ORM / Repository，必须把 GORM 实现约束写入计划任务和验收标准。
+- 如果当前阶段涉及 ORM / Repository，必须把 Repository 通过 `txmanager.Manager` 注入获取 DB 的约束写入计划任务和验收标准。
+- 如果当前阶段涉及真实 Service 实现，必须把 Service 通过 `txmanager.Manager` 注入编排事务、通过 `txCtx` 调用 Repository、禁止 Service 直接持有或拼装 `*gorm.DB` 的约束写入计划任务和验收标准。
+- 如果当前阶段涉及 MyBatis Example，必须规划读取实际业务调用点，并把 `Java 业务调用点 + Example 条件 + Mapper 方法 -> Go Repository 方法或 QueryFilter` 写入 traceability。
 - 所有自定义治理文档必须遵循 migration-governance-templates.md。
 - 每个批次完成后更新 migration-traceability.md。
 - 批次结束时更新 migration-roadmap.md、migration-decisions.md、migration-gaps.md。
@@ -721,7 +747,7 @@ GO_PROJECT_ROOT = <填写 Go 项目根目录>
 CURRENT_BATCH = <填写当前批次 ID>
 CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
-PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 
 说明：
 - 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
@@ -752,6 +778,12 @@ PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、dec
 - 不得修改前序批次已验收成果，除非记录 Decision/GAP、影响范围和重新验证结果。
 - 不得并行修改同一文件。
 - 如果当前阶段涉及 ORM / Repository，必须使用 GORM，并遵守静态 SQL 使用 Raw / Exec / Scan、动态 SQL 使用 GORM 条件构造、禁止 AutoMigrate、禁止依赖隐式 CRUD。
+- 如果当前阶段涉及 ORM / Repository，Repository 必须通过注入 `txmanager.Manager` 获取 DB；不得直接注入裸 `*gorm.DB`，不得在 Repository 中调用 `gorm.Open` 或使用全局 DB。
+- Repository 普通查询和写入统一使用 `manager.DB(ctx)`；需要事务时使用 `manager.WithinTransaction(ctx, func(txCtx context.Context) error { ... })`，并在事务内部继续传递 `txCtx`。
+- 如果当前阶段涉及真实 Service 实现，Service 必须通过注入 `txmanager.Manager` 编排业务事务；需要事务时使用 `manager.WithinTransaction(ctx, func(txCtx context.Context) error { ... })`，并把 `txCtx` 传给 Repository 方法。
+- Service 不得直接调用 `manager.DB(ctx)` 拼装 GORM 查询，不得持有或操作 `*gorm.DB`，不得调用 `gorm.Open`。
+- 如果当前阶段涉及 MyBatis Example，不得生成 Go `XxxExample` DSL；必须从实际业务调用点提取查询语义，并在 Repository 内使用 GORM 动态 Query 实现。
+- Service、Handler、Scheduler、Interceptor 等业务层不得直接持有或拼装 `*gorm.DB`。
 - 每个 Go 文件和关键符号必须标注 Java 来源。
 - 所有自定义治理文档必须遵循 migration-governance-templates.md，只做增量更新，不覆盖历史记录。
 - 每完成一个批次更新 migration-traceability.md、决策和 GAP。
@@ -767,7 +799,7 @@ GO_PROJECT_ROOT = <填写 Go 项目根目录>
 CURRENT_BATCH = <填写当前批次 ID>
 CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
-PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 spec、plan、traceability、decision、gap>
+PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 
 说明：
@@ -798,6 +830,12 @@ IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 - 是否覆盖当前批次对应的 Java 文件、Java 符号、Go 文件、Go 关键符号和测试。
 - Java/Go 行为是否完成阶段性对齐。
 - 如果当前阶段涉及 ORM / Repository，是否遵守 GORM 实现约束，包括静态 SQL、动态 SQL、AutoMigrate、隐式 CRUD、SQL 常量和 GAP 记录。
+- 如果当前阶段涉及 ORM / Repository，是否所有 Repository 都通过 `txmanager.Manager` 注入获取 DB，是否没有直接注入裸 `*gorm.DB`、调用 `gorm.Open` 或使用全局 DB。
+- 如果当前阶段涉及事务，是否通过 `manager.WithinTransaction` 和 `txCtx` 传递复用事务，普通查询和写入是否统一使用 `manager.DB(ctx)`。
+- 如果当前阶段涉及真实 Service 实现，是否所有 Service 实现对象都注入 `txmanager.Manager`，是否由 Service 使用 `manager.WithinTransaction` 编排业务事务并把 `txCtx` 传给 Repository。
+- 是否确认 Service 未直接调用 `manager.DB(ctx)` 拼装 GORM 查询，未持有或操作 `*gorm.DB`，未调用 `gorm.Open`。
+- 如果当前阶段涉及 MyBatis Example，是否没有直接翻译 `XxxExample` DSL，是否已覆盖所有实际业务调用点，是否已记录 `Java 业务调用点 + Example 条件 + Mapper 方法 -> Go Repository 方法或 QueryFilter` 的映射。
+- 是否确认 GORM 动态 Query 只出现在 Repository 层，未泄漏到 Service、Handler、Scheduler、Interceptor 等业务层。
 - 测试和验证是否通过。
 - Go 文件头和关键符号是否标注 Java 来源。
 - 自定义治理文档是否符合 migration-governance-templates.md。

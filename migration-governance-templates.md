@@ -130,6 +130,7 @@ spec/superpowers/plans/YYYY-MM-DD-P1-orm-kv-01-plan.md
 
 - 当前批次只能修改本批次 scope 内的 Go 代码和测试。
 - 当前批次可以读取前序批次产物，但不得覆盖前序批次的 specs/plans。
+- 前序批次引用只需要填写批次 ID，例如 `P1-orm-01` 或 `P1-orm-01,P1-orm-02`；Agent 必须按批次 ID 自动检索对应 spec、plan、migration 记录和 traceability 中的代码/测试路径，不要求人工逐个列文件路径。
 - 当前批次如需修改前序批次已验收代码，必须记录影响批次、修改原因、验证证据，并更新 `migration-decisions.md` 或 `migration-gaps.md`。
 - 批次完成时只更新 `migration-roadmap.md`、`migration-traceability.md`、`migration-decisions.md`、`migration-gaps.md`。
 - `phase-N-handoff.md` 只在整个阶段完成并通过 Review 后生成；不要每个批次都生成一个阶段 handoff。
@@ -425,6 +426,16 @@ spec/superpowers/plans/YYYY-MM-DD-P1-orm-kv-01-plan.md
 | 阶段 | 批次 | Java contentPath | Java 已迁移符号 | Go contentPath | Go 关键符号 | 映射类型 | 状态 | 验证结果 | GAP/备注 |
 |---|---|---|---|---|---|---|---|---|---|
 | 阶段 1 | `P1-orm-01` | `bic-service/src/.../FooMapper.java` | `selectFoo` | `internal/.../foo_repository.go` | `GetFoo` | 1:1 | 已验证 | 测试通过 | 无 |
+
+## MyBatis Example 映射记录规则
+
+MyBatis Example / Criteria / Criterion 不直接记录为 `XxxExample.java -> XxxExample.go`。
+
+如果 Java 业务代码使用 Example 拼装查询条件，溯源记录应写成：
+
+| 阶段 | 批次 | Java contentPath | Java 已迁移符号 | Go contentPath | Go 关键符号 | 映射类型 | 状态 | 验证结果 | GAP/备注 |
+|---|---|---|---|---|---|---|---|---|---|
+| 阶段 1 | `P1-orm-01` | `bic-service/src/.../FooService.java` | `listFoo: Example 条件 + FooMapper.selectByExample` | `internal/.../foo_repository.go` | `FooQuery`, `ListFoo` | N:1 | 已验证 | 测试通过 | `FooExample.java` 仅作为查询 DSL 来源，不直接迁移 |
 
 ## 增量变更记录
 

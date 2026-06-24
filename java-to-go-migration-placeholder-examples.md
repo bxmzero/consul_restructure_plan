@@ -17,7 +17,7 @@
 | `<CURRENT_BATCH_GOAL>` | 当前批次目标 | 必填 |
 | `<CURRENT_BATCH_JAVA_SCOPE>` | 当前批次允许分析和迁移的 Java 源码范围 | 必填 |
 | `<CURRENT_BATCH_GO_SCOPE>` | 当前批次允许新增或修改的 Go 目录或文件范围 | 建议填写 |
-| `<PREVIOUS_BATCH_REFERENCES>` | 前序批次的 spec、plan、traceability、decision、gap 等参考 | 第二个批次以后填写 |
+| `<PREVIOUS_BATCH_REFERENCES>` | 前序批次 ID，例如 `P1-orm-01` 或 `P1-orm-01,P1-orm-02` | 第二个批次以后填写 |
 | `<IS_FINAL_BATCH_OF_PHASE>` | 当前批次是否是本阶段最后一个批次 | Review 时必须明确 |
 | `<PREVIOUS_STAGE_HANDOFF>` | 上一阶段 handoff 文档路径 | 阶段 2 以后必填 |
 
@@ -26,6 +26,7 @@
 - 未列入 `<CURRENT_BATCH_JAVA_SCOPE>` 的 Java 代码，不属于当前批次目标。
 - 当前批次不得顺手迁移 scope 外代码。
 - 当前批次不得覆盖前序批次的 Superpowers specs/plans。
+- `<PREVIOUS_BATCH_REFERENCES>` 只填写前序批次 ID；Agent 负责按批次 ID 自动检索 spec、plan、治理记录和 traceability 中的代码/测试路径。
 - 只有 `<IS_FINAL_BATCH_OF_PHASE>` 为“是”且阶段全部批次通过 Review 后，才生成 `phase-N-handoff.md`。
 
 ## 3. 范本一：阶段 1 ORM 第一个批次
@@ -56,6 +57,7 @@ P1-orm-01
 - bic-service module 中 bic_service_kv 相关 Entity
 - BicServiceKvMapper Java 接口
 - BicServiceKvMapper 对应 MyBatis XML / 注解 SQL
+- 使用 BicServiceKvExample / Criteria / Criterion 的实际业务调用点，只读分析查询语义
 - bic_service_kv 表相关 DDL 或测试 SQL
 - 只读取必要的公共基础类、分页类、数据库方言类、事务相关类
 
@@ -105,6 +107,7 @@ P1-orm-02
 - 本批次对应的 Entity Java 文件
 - 本批次对应的 Mapper Java 接口
 - 本批次对应的 MyBatis XML / 注解 SQL
+- 本批次对应 MyBatis Example / Criteria / Criterion 的实际业务调用点，只读分析查询语义
 - 本批次相关 DDL 或测试 SQL
 - 只读取必要的公共基础类、分页类、数据库方言类、事务相关类
 
@@ -117,11 +120,7 @@ P1-orm-02
 - spec/superpowers/plans/
 
 <PREVIOUS_BATCH_REFERENCES>
-- <GO_PROJECT_ROOT>/spec/superpowers/specs/YYYY-MM-DD-P1-orm-01-design.md
-- <GO_PROJECT_ROOT>/spec/superpowers/plans/YYYY-MM-DD-P1-orm-01-plan.md
-- <GO_PROJECT_ROOT>/spec/migration/migration-traceability.md 中 P1-orm-01 记录
-- <GO_PROJECT_ROOT>/spec/migration/migration-decisions.md 中 P1-orm-01 相关 Decision
-- <GO_PROJECT_ROOT>/spec/migration/migration-gaps.md 中 P1-orm-01 未关闭 GAP
+P1-orm-01
 
 <IS_FINAL_BATCH_OF_PHASE>
 否。除非这是阶段 1 最后一个 ORM 批次，否则不要生成 phase-1-handoff.md。
@@ -157,12 +156,7 @@ P1-orm-NN
 - spec/superpowers/plans/
 
 <PREVIOUS_BATCH_REFERENCES>
-- P1-orm-01 到上一批次的 Superpowers specs
-- P1-orm-01 到上一批次的 Superpowers plans
-- <GO_PROJECT_ROOT>/spec/migration/migration-roadmap.md
-- <GO_PROJECT_ROOT>/spec/migration/migration-traceability.md
-- <GO_PROJECT_ROOT>/spec/migration/migration-decisions.md
-- <GO_PROJECT_ROOT>/spec/migration/migration-gaps.md
+P1-orm-01,P1-orm-02,...,P1-orm-(NN-1)
 
 <IS_FINAL_BATCH_OF_PHASE>
 是。当前批次 Review 通过后，需要执行阶段 1 完整性检查，并生成 phase-1-persistence-handoff.md。

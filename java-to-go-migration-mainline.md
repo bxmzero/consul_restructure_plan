@@ -82,7 +82,37 @@
 
 这些记录应写入 `migration-traceability.md`；如果差异涉及设计取舍或未完成行为，还应写入 `migration-decisions.md` 或 `migration-gaps.md`。
 
-### 3.4 阶段边界必须稳定
+### 3.4 MyBatis Example 不直接翻译
+
+涉及 MyBatis Example / Criteria / Criterion 的代码，不直接翻译为 Go 版本的 `XxxExample` DSL。
+
+迁移时必须以 Java 业务代码中的实际使用点为准，不限制使用点所在层级。只要 Controller、Service、Scheduler、Interceptor、Cache、Notify、生命周期任务或其他业务代码中使用了 MyBatis Example，都必须读取该调用点，提取实际 SQL 查询意图。
+
+需要提取和对齐的查询语义包括：
+
+- 查询字段和条件操作符，例如 `=`, `<>`, `LIKE`, `IN`, `BETWEEN`, `IS NULL`
+- AND / OR 分组关系
+- 条件启用规则，例如空字符串、null、集合为空时是否跳过
+- 默认值、排序、分页、distinct
+- 返回条数、返回顺序、空结果行为
+- 最终调用的 Mapper 方法和事务上下文
+
+Go 侧实现规则：
+
+- 不生成 `XxxExample.go`
+- 不迁移 `createCriteria()`、`andXxxEqualTo()`、`Criterion` 这类 MyBatis DSL 形态
+- 将 Java Example 调用点表达的查询意图抽象为 Repository 语义化方法或 Repository QueryFilter
+- GORM 的 `Where` / `Or` / `Scopes` / `Clauses` / `Order` / `Limit` / `Offset` 只允许在 Repository 层使用
+- Service、Handler、Scheduler、Interceptor 等业务层不得直接持有或拼装 `*gorm.DB`
+- 如果某个 Example 没有找到业务调用点，不臆造完整 Go 实现，先标记为 GAP
+
+溯源记录必须体现：
+
+```text
+Java 业务调用点 + Example 条件 + Mapper 方法 -> Go Repository 方法或 QueryFilter
+```
+
+### 3.5 阶段边界必须稳定
 
 每个阶段开始前明确：
 
@@ -307,6 +337,7 @@ GAP
 - Java Entity
 - MyBatis Mapper
 - SQL 和数据库方言
+- MyBatis Example / Criteria / Criterion 的实际业务调用点和查询语义
 - Go 持久化 Model
 - Go ORM / Repository
 - 事务基础能力
@@ -316,6 +347,7 @@ GAP
 
 - HTTP Router 和 Handler
 - 真实 Service 业务实现
+- Example 调用点所在业务链路的完整迁移；阶段 1 只允许只读分析调用点，用于恢复查询语义
 - Cache
 - Scheduler
 - Thread / ThreadPool
@@ -325,6 +357,7 @@ GAP
 ### 4.4 阶段产物
 
 - Java Mapper 与 Go Repository 映射关系
+- Java 业务调用点、Example 条件、Mapper 方法到 Go Repository 方法或 QueryFilter 的映射关系
 - Go 持久化 Model
 - Go Repository 接口和实现
 - SQL 行为和数据库方言差异记录
@@ -337,6 +370,7 @@ GAP
 - 目标持久化能力已迁移或明确标记 GAP
 - Go 持久化层可以独立编译和测试
 - 数据字段、查询结果、写入副作用和事务行为已验证
+- MyBatis Example 没有被直接翻译为 Go DSL，实际业务调用点的查询语义已迁移或明确标记 GAP
 - 没有引入后续阶段的业务实现
 
 ## 5. 阶段 2：API 契约层迁移
@@ -488,6 +522,7 @@ GAP
 - Service Interface 的真实实现
 - 业务规则
 - 事务编排
+- `txmanager.Manager` 注入和跨 Repository 事务上下文传递
 - Repository 调用
 - Cache 调用
 - Notify 调用
@@ -507,6 +542,7 @@ GAP
 - 完整业务调用链
 - 业务规则测试
 - 事务和副作用验证
+- Service 事务边界和 `txCtx` 传递验证
 - 已替换的 Stub 清单
 - Java/Go 业务差异记录
 - 阶段交接文档
@@ -516,6 +552,7 @@ GAP
 - 目标 Stub 已被真实 Service 替换
 - 主要业务链路可以完整运行
 - 业务规则、事务和副作用已完成阶段性验证
+- 真实 Service 实现已通过 `txmanager.Manager` 注入编排事务，未直接持有或拼装 `*gorm.DB`
 - 阻塞性 GAP 已解决或有明确处理方案
 
 ## 9. 阶段 6：系统级功能校验

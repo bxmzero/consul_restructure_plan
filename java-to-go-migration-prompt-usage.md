@@ -15,8 +15,8 @@
 ```text
 选择当前阶段和当前批次
 -> 复制对应阶段启动提示词
--> 执行 brainstorming
--> 人工进行一次最终确认
+-> 执行 brainstorming，按章节或主题逐段确认
+-> 全部章节确认完成后，人工确认进入 writing-plans
 -> 复制 7.1 生成当前批次计划
 -> 复制 7.2 执行当前批次计划
 -> 复制 7.3 批次 Review 和完成验证
@@ -24,9 +24,10 @@
 
 brainstorming 交互规则：
 
-- 请直接输出完整 brainstorming 结果，不要逐章节请求确认。
-- 只有在缺少关键输入、阶段范围冲突、Java source scope 不明确时，才暂停向人工提问。
-- brainstorming 完成后，只等待一次最终确认，再进入 writing-plans。
+- 为降低长任务中 API 中断带来的恢复成本，brainstorming 默认采用分章节或分主题输出。
+- 每输出一个章节或主题后，Agent 应暂停，请人工确认该部分是否正确、是否需要补充或修改。
+- 如果缺少关键输入、阶段范围冲突、Java source scope 不明确，也需要暂停向人工提问。
+- 全部章节确认完成后，等待人工明确确认进入 writing-plans。
 
 阶段必须按顺序推进：
 
@@ -101,7 +102,31 @@ P4-runtime-scheduler-01
 - 如果必须修改前序批次已验收代码，必须记录 Decision/GAP、影响范围和重新验证结果。
 - `phase-N-handoff.md` 只在当前阶段全部批次完成后生成，不要每个批次都生成阶段 handoff。
 
-## 5. 共同阅读文档
+## 5. 前序批次引用规则
+
+`PREVIOUS_BATCH_REFERENCES` 只需要填写前序批次 ID，不需要人工逐个列出文件路径。
+
+示例：
+
+```text
+PREVIOUS_BATCH_REFERENCES = 无
+PREVIOUS_BATCH_REFERENCES = P1-orm-01
+PREVIOUS_BATCH_REFERENCES = P1-orm-01,P1-orm-02
+```
+
+当 `PREVIOUS_BATCH_REFERENCES` 填写了批次 ID 时，Agent 必须按批次 ID 自动检索和读取：
+
+- `<GO_PROJECT_ROOT>/spec/superpowers/specs/` 中文件名包含该批次 ID 的 spec。
+- `<GO_PROJECT_ROOT>/spec/superpowers/plans/` 中文件名包含该批次 ID 的 plan。
+- `<GO_PROJECT_ROOT>/spec/migration/migration-roadmap.md` 中该批次相关状态。
+- `<GO_PROJECT_ROOT>/spec/migration/migration-traceability.md` 中 `Batch ID` 等于该批次 ID 的记录。
+- `<GO_PROJECT_ROOT>/spec/migration/migration-decisions.md` 中该批次相关 Decision。
+- `<GO_PROJECT_ROOT>/spec/migration/migration-gaps.md` 中该批次相关 GAP。
+- traceability 中记录的该批次已生成 Go 代码、测试和对应 Java 来源。
+
+如果根据批次 ID 找不到必要产物，Agent 应先说明缺失项；只有缺失会影响当前批次判断时，才暂停向人工提问。
+
+## 6. 共同阅读文档
 
 每个提示词执行前，Agent 都应该阅读：
 
@@ -117,7 +142,7 @@ P4-runtime-scheduler-01
 - `migration-governance-templates.md` 定义自定义迁移治理文档的结构和更新规则。
 - `java-to-go-migration-prompt-usage.md` 定义提示词使用方式和批次隔离规则。
 
-## 6. 文档输出位置
+## 7. 文档输出位置
 
 Superpowers 产物：
 
@@ -138,7 +163,7 @@ Superpowers 产物：
 
 如果 Superpowers 因默认行为生成到 `docs/superpowers/`，不要直接删除或覆盖。先在 `migration-roadmap.md` 中记录实际路径，再由人工确认是否调整目录。
 
-## 7. 占位符
+## 8. 占位符
 
 使用阶段提示词前，替换以下占位符：
 
@@ -157,13 +182,15 @@ Superpowers 产物：
 
 `java-to-go-migration-stage-prompts.md` 中每段提示词开头都有“本次输入值”块。实际使用时，只需要填写这个输入值块；正文里重复出现的 `<...>` 占位符由 Agent 按输入值块解析，不需要逐个替换。
 
+其中 `PREVIOUS_BATCH_REFERENCES` 填写前序批次 ID 即可，例如 `P1-orm-01` 或 `P1-orm-01,P1-orm-02`。Agent 负责按批次 ID 自动索引对应文档和记录。
+
 填写范本见：
 
 ```text
 /Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-placeholder-examples.md
 ```
 
-## 8. 每批次确认清单
+## 9. 每批次确认清单
 
 在确认 brainstorming 结果前检查：
 
