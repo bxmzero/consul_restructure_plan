@@ -95,12 +95,35 @@ Java 源码和实际运行行为
 ### 3.4 修改规则
 
 ```text
-migration-roadmap.md：更新现有状态，不重复创建同名阶段
-migration-decisions.md：追加 Decision；已有 Decision 通过状态更新或新 Decision 替代
-migration-gaps.md：追加或更新 GAP 状态，不删除历史 GAP
-migration-traceability.md：增量更新映射，不覆盖无关历史记录
+migration-roadmap.md：更新索引和当前批次段落，不重复创建同名阶段
+migration-decisions.md：追加 Decision 到当前批次段落；已有 Decision 通过状态更新或新 Decision 替代
+migration-gaps.md：追加或更新当前批次 GAP 状态，不删除历史 GAP
+migration-traceability.md：增量更新当前批次映射，不覆盖无关历史记录
 phase-N-handoff.md：阶段结束时生成，重新验收时更新同一个文件
 ```
+
+上述四个批次级治理文档必须采用统一结构：
+
+```markdown
+# <文档标题>
+
+## 索引
+
+## <CURRENT_BATCH>
+
+## <CURRENT_BATCH>
+
+## 变更记录
+```
+
+规则：
+
+- 每个批次必须使用二级标题 `## <CURRENT_BATCH>` 作为写入隔离边界。
+- 同一文档内不得出现重复的批次二级标题。
+- 当前批次只能新增或更新自己的 `## <CURRENT_BATCH>` 段落。
+- 不得修改其他批次段落，除非记录 Decision/GAP、影响范围和重新验证结果。
+- `## 索引` 和 `## 变更记录` 可以增量更新，但不得删除历史批次、历史 Decision 或历史 GAP。
+- 上述四个文档中的所有表格必须包含 `批次 ID` 列；全局记录使用 `GLOBAL` 作为 `批次 ID`。
 
 ### 3.5 批次隔离规则
 
@@ -168,65 +191,88 @@ spec/superpowers/plans/YYYY-MM-DD-P1-orm-kv-01-plan.md
 ```markdown
 # Java 到 Go 迁移路线图
 
-## 基线信息
+## 索引
 
-| 字段 | 值 |
-|---|---|
-| Java 项目 | `<JAVA_PROJECT>` |
-| Java 基线分支 | `<JAVA_BRANCH>` |
-| Java 基线 commit | `<JAVA_COMMIT_SHA>` |
-| Go 项目 | `<GO_PROJECT>` |
-| Go 当前分支 | `<GO_BRANCH>` |
-| Go 当前 commit | `<GO_COMMIT_SHA>` |
-| 当前阶段 | `<PHASE>` |
-| 当前批次 | `<BATCH_ID>` |
-| 最后更新时间 | `<YYYY-MM-DD HH:mm>` |
+### 基线信息
 
-## 阶段总览
+| 批次 ID | 字段 | 值 |
+|---|---|---|
+| GLOBAL | Java 项目 | `<JAVA_PROJECT>` |
+| GLOBAL | Java 基线分支 | `<JAVA_BRANCH>` |
+| GLOBAL | Java 基线 commit | `<JAVA_COMMIT_SHA>` |
+| GLOBAL | Go 项目 | `<GO_PROJECT>` |
+| GLOBAL | Go 当前分支 | `<GO_BRANCH>` |
+| GLOBAL | Go 当前 commit | `<GO_COMMIT_SHA>` |
+| GLOBAL | 当前阶段 | `<PHASE>` |
+| GLOBAL | 当前批次 | `<CURRENT_BATCH>` |
+| GLOBAL | 最后更新时间 | `<YYYY-MM-DD HH:mm>` |
 
-| 阶段 | 名称 | 当前批次 | 状态 | 前置依赖 | 验证结果 | 阻塞项 |
-|---|---|---|---|---|---|---|
-| 1 | 持久化层迁移 | `P1-orm-01` | 进行中 | 无 | 部分通过 | `GAP-001` |
-| 2 | API 契约层迁移 | - | 未开始 | 阶段 1 | 未执行 | - |
-| 3 | 横切基础设施迁移 | - | 未开始 | 阶段 2 | 未执行 | - |
-| 4 | 并发与生命周期迁移 | - | 未开始 | 阶段 3 | 未执行 | - |
-| 5 | Service 业务层迁移 | - | 未开始 | 阶段 1-4 | 未执行 | - |
-| 6 | 系统级功能校验 | - | 未开始 | 阶段 1-5 | 未执行 | - |
+### 阶段总览
 
-## 当前批次
-
-- 批次 ID：`<BATCH_ID>`
-- 批次目标：`<GOAL>`
-- Java 范围：`<JAVA_SCOPE>`
-- Go 范围：`<GO_SCOPE>`
-- 范围外规则：未列入 Java 范围和 Go 范围的内容，默认不是当前批次目标
-- 规格文档：`<SUPERPOWERS_SPEC_PATH>`
-- 计划文档：`<SUPERPOWERS_PLAN_PATH>`
-- 当前状态：`<STATUS>`
-
-## 批次索引
-
-| 批次 | 阶段 | 目标 | Java source scope | Go target scope | Superpowers spec | Superpowers plan | 状态 |
+| 批次 ID | 阶段 | 名称 | 状态 | 当前/最近批次 | 前置依赖 | 验证结果 | 阻塞项 |
 |---|---|---|---|---|---|---|---|
-| `P1-orm-01` | 阶段 1 | `<GOAL>` | `<JAVA_SCOPE>` | `<GO_SCOPE>` | `<SPEC_PATH>` | `<PLAN_PATH>` | `<STATUS>` |
+| GLOBAL | 1 | 持久化层迁移 | 进行中 | `P1-orm-01` | 无 | 部分通过 | `GAP-001` |
+| GLOBAL | 2 | API 契约层迁移 | 未开始 | - | 阶段 1 | 未执行 | - |
+| GLOBAL | 3 | 横切基础设施迁移 | 未开始 | - | 阶段 2 | 未执行 | - |
+| GLOBAL | 4 | 并发与生命周期迁移 | 未开始 | - | 阶段 3 | 未执行 | - |
+| GLOBAL | 5 | Service 业务层迁移 | 未开始 | - | 阶段 1-4 | 未执行 | - |
+| GLOBAL | 6 | 系统级功能校验 | 未开始 | - | 阶段 1-5 | 未执行 | - |
 
-## 当前阶段门禁
+### 批次索引
 
-- [ ] 当前阶段范围内工作完成
-- [ ] 测试和验证通过
-- [ ] 阻塞 Review 问题关闭
-- [ ] migration-decisions.md 已更新
-- [ ] migration-gaps.md 已更新
-- [ ] migration-traceability.md 已更新
-- [ ] Go 文件和关键符号已标注 Java 来源
-- [ ] Java 基线 commit 已记录
-- [ ] 阶段 handoff.md 已生成
+| 批次 ID | 阶段 | 目标 | Java source scope | Go target scope | Superpowers spec | Superpowers plan | 状态 | 最近更新时间 |
+|---|---|---|---|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `<PHASE>` | `<GOAL>` | `<JAVA_SCOPE>` | `<GO_SCOPE>` | `<SPEC_PATH>` | `<PLAN_PATH>` | `<STATUS>` | `<TIME>` |
 
-## 近期变更
+### 当前阶段门禁
 
-| 时间 | 批次 | 变更摘要 | 关联 Decision/GAP |
+| 批次 ID | 门禁项 | 状态 | 证据 |
 |---|---|---|---|
-| `<TIME>` | `<BATCH_ID>` | `<SUMMARY>` | `<DEC/GAP>` |
+| GLOBAL | 当前阶段范围内工作完成 | `<STATUS>` | `<EVIDENCE>` |
+| GLOBAL | 测试和验证通过 | `<STATUS>` | `<EVIDENCE>` |
+| GLOBAL | 阻塞 Review 问题关闭 | `<STATUS>` | `<EVIDENCE>` |
+| GLOBAL | migration-decisions.md 已更新 | `<STATUS>` | `<EVIDENCE>` |
+| GLOBAL | migration-gaps.md 已更新 | `<STATUS>` | `<EVIDENCE>` |
+| GLOBAL | migration-traceability.md 已更新 | `<STATUS>` | `<EVIDENCE>` |
+| GLOBAL | Go 文件和关键符号已标注 Java 来源 | `<STATUS>` | `<EVIDENCE>` |
+| GLOBAL | Java 基线 commit 已记录 | `<STATUS>` | `<EVIDENCE>` |
+| GLOBAL | 阶段 handoff.md 已生成 | `<STATUS>` | `<EVIDENCE>` |
+
+## `<CURRENT_BATCH>`
+
+### 批次信息
+
+| 批次 ID | 字段 | 值 |
+|---|---|---|
+| `<CURRENT_BATCH>` | 阶段 | `<PHASE>` |
+| `<CURRENT_BATCH>` | 批次目标 | `<GOAL>` |
+| `<CURRENT_BATCH>` | Java source scope | `<JAVA_SCOPE>` |
+| `<CURRENT_BATCH>` | Go target scope | `<GO_SCOPE>` |
+| `<CURRENT_BATCH>` | 前序批次 | `<PREVIOUS_BATCH_REFERENCES>` |
+| `<CURRENT_BATCH>` | 是否阶段最后批次 | `<IS_FINAL_BATCH_OF_PHASE>` |
+| `<CURRENT_BATCH>` | Spec | `<SUPERPOWERS_SPEC_PATH>` |
+| `<CURRENT_BATCH>` | Plan | `<SUPERPOWERS_PLAN_PATH>` |
+| `<CURRENT_BATCH>` | 状态 | `<STATUS>` |
+| `<CURRENT_BATCH>` | 开始时间 | `<START_TIME>` |
+| `<CURRENT_BATCH>` | 完成时间 | `<END_TIME_OR_EMPTY>` |
+
+### 执行摘要
+
+| 批次 ID | 项目 | 内容 |
+|---|---|---|
+| `<CURRENT_BATCH>` | 完成内容 | `<SUMMARY>` |
+| `<CURRENT_BATCH>` | 测试结果 | `<TEST_RESULT>` |
+| `<CURRENT_BATCH>` | Review 结果 | `<REVIEW_RESULT>` |
+| `<CURRENT_BATCH>` | 关联 Decision | `<DEC_IDS>` |
+| `<CURRENT_BATCH>` | 关联 GAP | `<GAP_IDS>` |
+| `<CURRENT_BATCH>` | 关联 Traceability | `<TRACEABILITY_SECTION_OR_ROWS>` |
+| `<CURRENT_BATCH>` | 下一步 | `<NEXT_STEP>` |
+
+## 变更记录
+
+| 批次 ID | 时间 | 类型 | 摘要 | 证据 |
+|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `<TIME>` | `<START/UPDATE/REVIEW/DONE>` | `<SUMMARY>` | `<EVIDENCE>` |
 ```
 
 ### 4.4 状态枚举
@@ -254,69 +300,82 @@ spec/superpowers/plans/YYYY-MM-DD-P1-orm-kv-01-plan.md
 - 实现过程中发生计划外设计变化时
 - Review 或验证导致原决策调整时
 
-### 5.3 索引模板
+### 5.3 模板
 
 ```markdown
 # Java 到 Go 迁移决策记录
 
-## 决策索引
+## 索引
 
-| Decision ID | 阶段 | 标题 | 状态 | 日期 | 替代/被替代 |
-|---|---|---|---|---|---|
-| `DEC-001` | 阶段 1 | `<TITLE>` | 已确认 | `<DATE>` | - |
-```
+| 批次 ID | Decision ID | 阶段 | 标题 | 状态 | 日期 | 替代/被替代 |
+|---|---|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `DEC-XXX` | `<PHASE>` | `<TITLE>` | 已确认 | `<DATE>` | - |
 
-### 5.4 单条 Decision 模板
+## `<CURRENT_BATCH>`
 
-```markdown
-## DEC-001：<决策标题>
+### DEC-XXX：`<决策标题>`
 
-- 状态：提议 / 已确认 / 已废弃 / 已替代
-- 日期：`<YYYY-MM-DD>`
-- 阶段：`<PHASE>`
-- 批次：`<BATCH_ID>`
-- 决策人：`<HUMAN_OR_AGENT>`
-- Java 基线 commit：`<JAVA_COMMIT_SHA>`
+#### 基本信息
 
-### 背景
+| 批次 ID | 字段 | 值 |
+|---|---|---|
+| `<CURRENT_BATCH>` | Decision ID | `DEC-XXX` |
+| `<CURRENT_BATCH>` | 状态 | 提议 / 已确认 / 已废弃 / 已替代 |
+| `<CURRENT_BATCH>` | 日期 | `<YYYY-MM-DD>` |
+| `<CURRENT_BATCH>` | 阶段 | `<PHASE>` |
+| `<CURRENT_BATCH>` | 决策人 | `<HUMAN_OR_AGENT>` |
+| `<CURRENT_BATCH>` | Java 基线 commit | `<JAVA_COMMIT_SHA>` |
+
+#### 背景
 
 <为什么需要做这个决策>
 
-### Java 现状与证据
+#### Java 现状与证据
 
-- Java contentPath：`<PATH>`
-- Java 已迁移符号：`<CLASS/METHOD/FIELD>`
-- 证据摘要：`<EVIDENCE>`
+| 批次 ID | Java contentPath | Java 已迁移符号 | 证据摘要 |
+|---|---|---|---|
+| `<CURRENT_BATCH>` | `<PATH>` | `<CLASS/METHOD/FIELD>` | `<EVIDENCE>` |
 
-### 候选方案
+#### 候选方案
 
 1. `<OPTION_A>`
 2. `<OPTION_B>`
 3. `<OPTION_C>`
 
-### 最终选择
+#### 最终选择
 
 <选择的方案>
 
-### 选择原因
+#### 选择原因
 
 <为什么选择>
 
-### 影响范围
+#### 影响范围
 
-- Go 文件：`<GO_PATHS>`
-- 测试：`<TEST_PATHS>`
-- 后续阶段：`<AFFECTED_PHASES>`
+| 批次 ID | 类型 | 路径/对象 |
+|---|---|---|
+| `<CURRENT_BATCH>` | Go 文件 | `<GO_PATHS>` |
+| `<CURRENT_BATCH>` | 测试 | `<TEST_PATHS>` |
+| `<CURRENT_BATCH>` | 后续阶段 | `<AFFECTED_PHASES>` |
 
-### 验证方式
+#### 验证方式
 
 <如何证明决策有效>
 
-### 关联记录
+#### 关联记录
 
-- 关联 GAP：`<GAP_IDS>`
-- 替代 Decision：`<DEC_ID_OR_NONE>`
-- 被替代 Decision：`<DEC_ID_OR_NONE>`
+| 批次 ID | 类型 | 关联项 |
+|---|---|---|
+| `<CURRENT_BATCH>` | GAP | `<GAP_IDS>` |
+| `<CURRENT_BATCH>` | Traceability | `<TRACEABILITY_SECTION_OR_ROWS>` |
+| `<CURRENT_BATCH>` | 替代 Decision | `<DEC_ID_OR_NONE>` |
+| `<CURRENT_BATCH>` | 被替代 Decision | `<DEC_ID_OR_NONE>` |
+
+## 变更记录
+
+| 批次 ID | 时间 | Decision ID | 类型 | 摘要 |
+|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `<TIME>` | `DEC-XXX` | `<CREATE/UPDATE/REPLACE>` | `<SUMMARY>` |
 ```
 
 ## 6. migration-gaps.md 模板
@@ -333,63 +392,77 @@ spec/superpowers/plans/YYYY-MM-DD-P1-orm-kv-01-plan.md
 - 数据库方言、外部依赖或运行环境无法验证时
 - Review 或测试发现未覆盖行为时
 
-### 6.3 GAP 索引模板
+### 6.3 模板
 
 ```markdown
 # Java 到 Go 迁移缺口记录
 
-## GAP 索引
+## 索引
 
-| GAP ID | 阶段 | 标题 | 严重级别 | 状态 | 阻塞阶段 | 负责人 |
-|---|---|---|---|---|---|---|
-| `GAP-001` | 阶段 1 | `<TITLE>` | 高 | 待确认 | 阶段 2 | `<OWNER>` |
-```
+| 批次 ID | GAP ID | 阶段 | 标题 | 严重级别 | 状态 | 阻塞阶段 | 负责人 |
+|---|---|---|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `GAP-XXX` | `<PHASE>` | `<TITLE>` | 高 | 待确认 | `<BLOCKED_PHASE>` | `<OWNER>` |
 
-### 6.4 单条 GAP 模板
+## `<CURRENT_BATCH>`
 
-```markdown
-## GAP-001：<缺口标题>
+### GAP-XXX：`<缺口标题>`
 
-- 状态：待确认 / 已确认 / 处理中 / 已解决 / 接受风险 / 排除
-- 严重级别：阻塞 / 高 / 中 / 低
-- 发现日期：`<YYYY-MM-DD>`
-- 发现阶段：`<PHASE>`
-- 发现批次：`<BATCH_ID>`
-- 负责人：`<OWNER>`
-- Java 基线 commit：`<JAVA_COMMIT_SHA>`
+#### 基本信息
 
-### 问题描述
+| 批次 ID | 字段 | 值 |
+|---|---|---|
+| `<CURRENT_BATCH>` | GAP ID | `GAP-XXX` |
+| `<CURRENT_BATCH>` | 状态 | 待确认 / 已确认 / 处理中 / 已解决 / 接受风险 / 排除 |
+| `<CURRENT_BATCH>` | 严重级别 | 阻塞 / 高 / 中 / 低 |
+| `<CURRENT_BATCH>` | 发现日期 | `<YYYY-MM-DD>` |
+| `<CURRENT_BATCH>` | 发现阶段 | `<PHASE>` |
+| `<CURRENT_BATCH>` | 阻塞阶段 | `<BLOCKED_PHASE>` |
+| `<CURRENT_BATCH>` | 负责人 | `<OWNER>` |
+| `<CURRENT_BATCH>` | Java 基线 commit | `<JAVA_COMMIT_SHA>` |
+
+#### 问题描述
 
 <缺口是什么>
 
-### Java 来源与证据
+#### Java 来源与证据
 
-- Java contentPath：`<PATH>`
-- Java 关键符号：`<CLASS/METHOD/FIELD>`
-- 证据：`<EVIDENCE>`
+| 批次 ID | Java contentPath | Java 关键符号 | 证据 |
+|---|---|---|---|
+| `<CURRENT_BATCH>` | `<PATH>` | `<CLASS/METHOD/FIELD>` | `<EVIDENCE>` |
 
-### Go 影响范围
+#### Go 影响范围
 
-- Go contentPath：`<PATHS>`
-- 影响阶段：`<PHASES>`
-- 影响行为：`<BEHAVIOR>`
+| 批次 ID | 项目 | 内容 |
+|---|---|---|
+| `<CURRENT_BATCH>` | Go contentPath | `<PATHS>` |
+| `<CURRENT_BATCH>` | 影响阶段 | `<PHASES>` |
+| `<CURRENT_BATCH>` | 影响行为 | `<BEHAVIOR>` |
 
-### 当前处理
+#### 当前处理
 
 <临时处理或当前结论>
 
-### 关闭条件
+#### 关闭条件
 
 <满足什么证据后可以关闭>
 
-### 最终处理结果
+#### 最终处理结果
 
 <未解决时保持为空>
 
-### 关联记录
+#### 关联记录
 
-- 关联 Decision：`<DEC_IDS>`
-- 关联测试：`<TEST_PATHS>`
+| 批次 ID | 类型 | 关联项 |
+|---|---|---|
+| `<CURRENT_BATCH>` | Decision | `<DEC_IDS>` |
+| `<CURRENT_BATCH>` | Traceability | `<TRACEABILITY_SECTION_OR_ROWS>` |
+| `<CURRENT_BATCH>` | 测试 | `<TEST_PATHS>` |
+
+## 变更记录
+
+| 批次 ID | 时间 | GAP ID | 类型 | 摘要 |
+|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `<TIME>` | `GAP-XXX` | `<CREATE/UPDATE/CLOSE>` | `<SUMMARY>` |
 ```
 
 ## 7. migration-traceability.md 模板
@@ -411,37 +484,64 @@ spec/superpowers/plans/YYYY-MM-DD-P1-orm-kv-01-plan.md
 ```markdown
 # Java 到 Go 迁移溯源矩阵
 
-## 基线信息
+## 索引
 
-| 字段 | 值 |
-|---|---|
-| Java 基线分支 | `<JAVA_BRANCH>` |
-| Java 基线 commit | `<JAVA_COMMIT_SHA>` |
-| Go 分支 | `<GO_BRANCH>` |
-| Go commit | `<GO_COMMIT_SHA>` |
-| 最后更新时间 | `<TIME>` |
+### 基线信息
 
-## 文件与符号映射
+| 批次 ID | 字段 | 值 |
+|---|---|---|
+| GLOBAL | Java 基线分支 | `<JAVA_BRANCH>` |
+| GLOBAL | Java 基线 commit | `<JAVA_COMMIT_SHA>` |
+| GLOBAL | Go 分支 | `<GO_BRANCH>` |
+| GLOBAL | Go commit | `<GO_COMMIT_SHA>` |
+| GLOBAL | 最后更新时间 | `<TIME>` |
 
-| 阶段 | 批次 | Java contentPath | Java 已迁移符号 | Go contentPath | Go 关键符号 | 映射类型 | 状态 | 验证结果 | GAP/备注 |
-|---|---|---|---|---|---|---|---|---|---|
-| 阶段 1 | `P1-orm-01` | `bic-service/src/.../FooMapper.java` | `selectFoo` | `internal/.../foo_repository.go` | `GetFoo` | 1:1 | 已验证 | 测试通过 | 无 |
+### 批次索引
 
-## MyBatis Example 映射记录规则
+| 批次 ID | 阶段 | Java source scope | Go target scope | 映射数量 | 状态 | 最近更新时间 |
+|---|---|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `<PHASE>` | `<JAVA_SCOPE>` | `<GO_SCOPE>` | `<COUNT>` | `<STATUS>` | `<TIME>` |
+
+## `<CURRENT_BATCH>`
+
+### 批次范围
+
+| 批次 ID | 字段 | 值 |
+|---|---|---|
+| `<CURRENT_BATCH>` | 阶段 | `<PHASE>` |
+| `<CURRENT_BATCH>` | Java source scope | `<JAVA_SCOPE>` |
+| `<CURRENT_BATCH>` | Go target scope | `<GO_SCOPE>` |
+| `<CURRENT_BATCH>` | Java 基线 commit | `<JAVA_COMMIT_SHA>` |
+| `<CURRENT_BATCH>` | Go commit | `<GO_COMMIT_SHA>` |
+| `<CURRENT_BATCH>` | 状态 | `<STATUS>` |
+
+### 文件与符号映射
+
+| 批次 ID | Java contentPath | Java 已迁移符号 | Go contentPath | Go 关键符号 | 映射类型 | 状态 | 验证结果 | GAP/备注 |
+|---|---|---|---|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `bic-service/src/.../FooMapper.java` | `selectFoo` | `internal/.../foo_repository.go` | `GetFoo` | 1:1 | 已验证 | 测试通过 | 无 |
+
+### MyBatis Example 映射
 
 MyBatis Example / Criteria / Criterion 不直接记录为 `XxxExample.java -> XxxExample.go`。
 
 如果 Java 业务代码使用 Example 拼装查询条件，溯源记录应写成：
 
-| 阶段 | 批次 | Java contentPath | Java 已迁移符号 | Go contentPath | Go 关键符号 | 映射类型 | 状态 | 验证结果 | GAP/备注 |
-|---|---|---|---|---|---|---|---|---|---|
-| 阶段 1 | `P1-orm-01` | `bic-service/src/.../FooService.java` | `listFoo: Example 条件 + FooMapper.selectByExample` | `internal/.../foo_repository.go` | `FooQuery`, `ListFoo` | N:1 | 已验证 | 测试通过 | `FooExample.java` 仅作为查询 DSL 来源，不直接迁移 |
+| 批次 ID | Java 业务调用点 | Example 条件摘要 | Mapper 方法 | Go contentPath | Go Repository 方法 / QueryFilter | 状态 | 验证结果 | GAP/备注 |
+|---|---|---|---|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `FooService.listFoo` | `key like ? AND session_id IS NULL` | `FooMapper.selectByExample` | `internal/.../foo_repository.go` | `FooQuery`, `ListFoo` | 已验证 | 测试通过 | `FooExample.java` 仅作为 DSL 来源 |
 
-## 增量变更记录
+### 测试映射
 
-| 时间 | Java commit 范围 | 变化文件 | 影响 Go 文件 | 处理状态 | 关联 GAP |
-|---|---|---|---|---|---|
-| `<TIME>` | `<OLD>..<NEW>` | `<JAVA_PATHS>` | `<GO_PATHS>` | `<STATUS>` | `<GAP_IDS>` |
+| 批次 ID | Go 测试文件 | 测试名称 | 覆盖 Java 行为 | 状态 |
+|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `<TEST_PATH>` | `<TEST_NAME>` | `<JAVA_BEHAVIOR>` | `<STATUS>` |
+
+## 变更记录
+
+| 批次 ID | 时间 | Java commit 范围 | 变化文件 | 影响 Go 文件 | 处理状态 | 关联 GAP |
+|---|---|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `<TIME>` | `<OLD>..<NEW>` | `<JAVA_PATHS>` | `<GO_PATHS>` | `<STATUS>` | `<GAP_IDS>` |
 ```
 
 ### 7.4 映射类型
