@@ -22,6 +22,7 @@ CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
 PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <无 / 上一阶段 handoff 路径>
+CUSTOM_INSTRUCTIONS = <可选：填写当前批次额外关注点、特殊约束或人工要求；无则填 无>
 
 说明：
 - 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
@@ -59,6 +60,7 @@ PREVIOUS_STAGE_HANDOFF = <无 / 上一阶段 handoff 路径>
 - Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 自定义补充：<CUSTOM_INSTRUCTIONS>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
 - Superpowers spec/plan 文件名必须包含批次 ID，例如 P1-orm-01-design.md、P1-orm-01-plan.md。
 - 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
@@ -153,6 +155,7 @@ CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
 PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
+CUSTOM_INSTRUCTIONS = <可选：填写当前批次额外关注点、特殊约束或人工要求；无则填 无>
 
 说明：
 - 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
@@ -196,6 +199,7 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 自定义补充：<CUSTOM_INSTRUCTIONS>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
 - Superpowers spec/plan 文件名必须包含批次 ID，例如 P2-api-01-design.md、P2-api-01-plan.md。
 - 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
@@ -263,6 +267,7 @@ CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
 PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
+CUSTOM_INSTRUCTIONS = <可选：填写当前批次额外关注点、特殊约束或人工要求；无则填 无>
 
 说明：
 - 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
@@ -306,6 +311,7 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 自定义补充：<CUSTOM_INSTRUCTIONS>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
 - Superpowers spec/plan 文件名必须包含批次 ID，例如 P3-infra-01-design.md、P3-infra-01-plan.md。
 - 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
@@ -368,6 +374,7 @@ CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
 PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
+CUSTOM_INSTRUCTIONS = <可选：填写当前批次额外关注点、特殊约束或人工要求；无则填 无>
 
 说明：
 - 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
@@ -411,6 +418,7 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 自定义补充：<CUSTOM_INSTRUCTIONS>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
 - Superpowers spec/plan 文件名必须包含批次 ID，例如 P4-runtime-01-design.md、P4-runtime-01-plan.md。
 - 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
@@ -474,6 +482,7 @@ CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
 PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
+CUSTOM_INSTRUCTIONS = <可选：填写当前批次额外关注点、特殊约束或人工要求；无则填 无>
 
 说明：
 - 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
@@ -517,6 +526,7 @@ PREVIOUS_STAGE_HANDOFF = <上一阶段 handoff 路径>
 - Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 自定义补充：<CUSTOM_INSTRUCTIONS>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
 - Superpowers spec/plan 文件名必须包含批次 ID，例如 P5-service-01-design.md、P5-service-01-plan.md。
 - 当前批次只能处理 Java source scope 和 Go target scope 内的内容；scope 外默认不是本批次目标。
@@ -592,6 +602,7 @@ CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
 PREVIOUS_BATCH_REFERENCES = <前序批次 ID，例如 P1-orm-01,P2-api-01,P3-infra-01>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 PREVIOUS_STAGE_HANDOFF = <阶段 1-5 handoff 路径>
+CUSTOM_INSTRUCTIONS = <可选：填写当前批次额外关注点、特殊约束或人工要求；无则填 无>
 
 说明：
 - 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
@@ -638,6 +649,7 @@ PREVIOUS_STAGE_HANDOFF = <阶段 1-5 handoff 路径>
 - Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 自定义补充：<CUSTOM_INSTRUCTIONS>
 - 是否当前阶段最后一个批次：<IS_FINAL_BATCH_OF_PHASE>
 - Superpowers spec/plan 文件名必须包含批次 ID，例如 P6-verify-01-design.md、P6-verify-01-plan.md。
 - 当前批次只能验证 Java source scope 和 Go target scope 内的功能；不得隐式扩大到未声明范围。
@@ -700,6 +712,7 @@ CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
 PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
+CUSTOM_INSTRUCTIONS = <可选：填写当前批次额外关注点、特殊约束或人工要求；无则填 无>
 
 说明：
 - 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
@@ -715,6 +728,7 @@ IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 - Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 自定义补充：<CUSTOM_INSTRUCTIONS>
 
 继续遵守：
 - 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
@@ -751,6 +765,7 @@ CURRENT_BATCH = <填写当前批次 ID>
 CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
 PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
+CUSTOM_INSTRUCTIONS = <可选：填写当前批次额外关注点、特殊约束或人工要求；无则填 无>
 
 说明：
 - 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
@@ -765,6 +780,7 @@ PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm
 - Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 自定义补充：<CUSTOM_INSTRUCTIONS>
 
 继续遵守：
 - 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md
@@ -807,6 +823,7 @@ CURRENT_BATCH_JAVA_SCOPE = <填写当前批次 Java source scope>
 CURRENT_BATCH_GO_SCOPE = <填写当前批次 Go target scope>
 PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm-01,P1-orm-02>
 IS_FINAL_BATCH_OF_PHASE = <是 / 否>
+CUSTOM_INSTRUCTIONS = <可选：填写当前批次额外关注点、特殊约束或人工要求；无则填 无>
 
 说明：
 - 下文所有 `<...>` 占位符均使用“本次输入值”中的对应值。
@@ -822,6 +839,7 @@ IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 - Java source scope：<CURRENT_BATCH_JAVA_SCOPE>
 - Go target scope：<CURRENT_BATCH_GO_SCOPE>
 - 前序批次参考：<PREVIOUS_BATCH_REFERENCES>
+- 自定义补充：<CUSTOM_INSTRUCTIONS>
 
 继续遵守：
 - 提示词使用说明：/Users/baoxiaomin/project_code/vibe_prj/plan/java-to-go-migration-prompt-usage.md

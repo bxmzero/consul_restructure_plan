@@ -178,11 +178,14 @@ Superpowers 产物：
 <PREVIOUS_BATCH_REFERENCES>
 <IS_FINAL_BATCH_OF_PHASE>
 <PREVIOUS_STAGE_HANDOFF>
+<CUSTOM_INSTRUCTIONS>
 ```
 
 `java-to-go-migration-stage-prompts.md` 中每段提示词开头都有“本次输入值”块。实际使用时，只需要填写这个输入值块；正文里重复出现的 `<...>` 占位符由 Agent 按输入值块解析，不需要逐个替换。
 
 其中 `PREVIOUS_BATCH_REFERENCES` 填写前序批次 ID 即可，例如 `P1-orm-01` 或 `P1-orm-01,P1-orm-02`。Agent 负责按批次 ID 自动索引对应文档和记录。
+
+其中 `CUSTOM_INSTRUCTIONS` 是可选的当前批次补充提示，用于填写额外关注点、特殊约束或人工要求；没有补充时填写 `无`。自定义补充只能收窄或强调当前批次要求，不得覆盖主线、阶段边界和治理规则。
 
 填写范本见：
 

@@ -20,6 +20,7 @@
 | `<PREVIOUS_BATCH_REFERENCES>` | 前序批次 ID，例如 `P1-orm-01` 或 `P1-orm-01,P1-orm-02` | 第二个批次以后填写 |
 | `<IS_FINAL_BATCH_OF_PHASE>` | 当前批次是否是本阶段最后一个批次 | Review 时必须明确 |
 | `<PREVIOUS_STAGE_HANDOFF>` | 上一阶段 handoff 文档路径 | 阶段 2 以后必填 |
+| `<CUSTOM_INSTRUCTIONS>` | 当前批次额外关注点、特殊约束或人工要求；没有则填写 `无` | 可选 |
 
 默认规则：
 
@@ -27,6 +28,7 @@
 - 当前批次不得顺手迁移 scope 外代码。
 - 当前批次不得覆盖前序批次的 Superpowers specs/plans。
 - `<PREVIOUS_BATCH_REFERENCES>` 只填写前序批次 ID；Agent 负责按批次 ID 自动检索 spec、plan、治理记录和 traceability 中的代码/测试路径。
+- `<CUSTOM_INSTRUCTIONS>` 只能补充或收窄当前批次要求，不得覆盖主线、阶段边界和治理规则。
 - 只有 `<IS_FINAL_BATCH_OF_PHASE>` 为“是”且阶段全部批次通过 Review 后，才生成 `phase-N-handoff.md`。
 
 ## 3. 范本一：阶段 1 ORM 第一个批次
@@ -77,6 +79,9 @@ P1-orm-01
 
 <PREVIOUS_STAGE_HANDOFF>
 无。当前是阶段 1，不存在上一阶段 handoff。
+
+<CUSTOM_INSTRUCTIONS>
+无。
 ```
 
 ## 4. 范本二：阶段 1 ORM 第二个批次
@@ -127,6 +132,9 @@ P1-orm-01
 
 <PREVIOUS_STAGE_HANDOFF>
 无。当前仍然是阶段 1，不存在上一阶段 handoff。
+
+<CUSTOM_INSTRUCTIONS>
+无。
 ```
 
 ## 5. 范本三：阶段 1 ORM 最后一个批次
@@ -163,6 +171,9 @@ P1-orm-01,P1-orm-02,...,P1-orm-(NN-1)
 
 <PREVIOUS_STAGE_HANDOFF>
 无。当前仍然是阶段 1，不存在上一阶段 handoff。
+
+<CUSTOM_INSTRUCTIONS>
+无。
 ```
 
 ## 6. 范本四：阶段 2 API 第一个批次
@@ -213,6 +224,9 @@ P2-api-01
 
 <PREVIOUS_STAGE_HANDOFF>
 <GO_PROJECT_ROOT>/spec/migration/handoffs/phase-1-persistence-handoff.md
+
+<CUSTOM_INSTRUCTIONS>
+无。
 ```
 
 ## 7. 快速填写模板
@@ -242,4 +256,7 @@ P2-api-01
 否 / 是
 
 <PREVIOUS_STAGE_HANDOFF>
+
+<CUSTOM_INSTRUCTIONS>
+无。
 ```
