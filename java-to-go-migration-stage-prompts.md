@@ -776,7 +776,7 @@ PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm
 要求：
 - 只执行当前批次计划。
 - 先验证或编写测试，再实现代码。
-- Go 测试文件必须默认与被测源码同目录、同 package，例如 `foo_repository.go` 对应 `foo_repository_test.go`；不得为当前包单元测试另建独立测试目录。
+- Go 测试文件必须默认与被测源码同目录、同 package；单元测试文件名必须使用 `unit_<源文件名去掉.go>_test.go` 格式，例如 `foo_repository.go` 对应 `unit_foo_repository_test.go`；不得为当前包单元测试另建独立测试目录。
 - 如因跨包系统测试、端到端测试、集成测试或项目既有约定需要放到独立测试目录，必须记录原因、测试类型和关联批次。
 - 不得超出当前阶段范围。
 - 不得超出当前批次 Java source scope 和 Go target scope。

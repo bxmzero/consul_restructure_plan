@@ -544,7 +544,7 @@ MyBatis Example / Criteria / Criterion 不直接记录为 `XxxExample.java -> Xx
 
 | 批次 ID | Go 被测源码 | Go 测试文件 | 测试 package | 是否同目录 | 测试名称 | 覆盖 Java 行为 | 状态 | GAP/备注 |
 |---|---|---|---|---|---|---|---|---|
-| `<CURRENT_BATCH>` | `internal/.../foo_repository.go` | `internal/.../foo_repository_test.go` | `repository` | 是 | `<TEST_NAME>` | `<JAVA_BEHAVIOR>` | `<STATUS>` | 无 |
+| `<CURRENT_BATCH>` | `internal/.../foo_repository.go` | `internal/.../unit_foo_repository_test.go` | `repository` | 是 | `<TEST_NAME>` | `<JAVA_BEHAVIOR>` | `<STATUS>` | 无 |
 
 ## 变更记录
 

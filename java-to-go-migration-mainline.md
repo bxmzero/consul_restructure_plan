@@ -321,14 +321,14 @@ GAP
 
 ```text
 internal/consulapi/repository/kv_repository.go
-internal/consulapi/repository/kv_repository_test.go
+internal/consulapi/repository/unit_kv_repository_test.go
 ```
 
 要求：
 
 - 不要另建独立测试目录承载当前包的单元测试。
 - 不要把 Repository、Handler、Service、Runtime 等包内测试统一塞到外部 `tests/` 目录。
-- 测试文件名应优先贴近被测源码，例如 `kv_repository_test.go`、`kv_handler_test.go`、`kv_service_test.go`。
+- 单元测试文件命名必须使用 `unit_<源文件名去掉.go>_test.go` 格式，例如 `kv_repository.go` 对应 `unit_kv_repository_test.go`，`kv_handler.go` 对应 `unit_kv_handler_test.go`，`kv_service.go` 对应 `unit_kv_service_test.go`。
 - 测试 package 默认使用源码同包 package，除非项目已有明确的 `_test` 外部包规范。
 - 只有跨包系统测试、端到端测试、集成测试或项目既有约定明确要求时，才允许放到独立测试目录；例外必须在 `migration-decisions.md` 或 `migration-traceability.md` 中记录原因。
 
