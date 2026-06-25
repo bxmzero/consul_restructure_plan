@@ -100,6 +100,7 @@ GORM 实现约束：
 - 只要业务代码中使用 MyBatis Example，不论使用点在 Service、Controller、Scheduler、Interceptor、Cache、Notify、生命周期任务或其他层，都必须读取该调用点，提取实际查询条件、AND / OR 分组、排序、分页、distinct、NULL 规则和最终 Mapper 调用。
 - Go 侧使用 Repository 语义化方法或 Repository QueryFilter 承接这些查询意图，由 Repository 内部使用 GORM Where / Or / Scopes / Clauses / Order / Limit / Offset 动态构造 SQL。
 - Service、Handler、Scheduler、Interceptor 等业务层不得直接持有或拼装 `*gorm.DB`。
+- 被读取但不生成对应 Go 文件的 Example / Criteria / Criterion Java 文件，必须在 migration-traceability.md 的“Java 重构吸收 / 排除记录”中记录为“重构吸收”或“排除不迁移”，不得当作遗漏忽略。
 - 如果某个 Example 没有找到业务调用点，不臆造完整实现，标记为 GAP。
 - 优先支持 PostgreSQL。
 - SQL Server / 达梦数据库的差异如果暂不实现，需要标记为 GAP。
@@ -728,10 +729,12 @@ IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 - 如果发现当前 scope 仍然过大，只提出进一步拆分建议，不在本次计划中扩大范围。
 - 每个任务明确输入、输出、允许修改范围、禁止修改范围和验收标准。
 - 每个任务包含 Java/Go 文件和关键符号溯源要求。
+- 每个任务涉及 Go 测试时，默认规划测试文件与被测源码同目录、同 package；除非项目已有明确例外，不规划独立测试目录。
 - 如果当前阶段涉及 ORM / Repository，必须把 GORM 实现约束写入计划任务和验收标准。
 - 如果当前阶段涉及 ORM / Repository，必须把 Repository 通过 `txmanager.Manager` 注入获取 DB 的约束写入计划任务和验收标准。
 - 如果当前阶段涉及真实 Service 实现，必须把 Service 通过 `txmanager.Manager` 注入编排事务、通过 `txCtx` 调用 Repository、禁止 Service 直接持有或拼装 `*gorm.DB` 的约束写入计划任务和验收标准。
 - 如果当前阶段涉及 MyBatis Example，必须规划读取实际业务调用点，并把 `Java 业务调用点 + Example 条件 + Mapper 方法 -> Go Repository 方法或 QueryFilter` 写入 traceability。
+- 如果当前批次存在被读取但不生成 Go 文件的 Java 文件或符号，必须规划在 migration-traceability.md 中记录为“重构吸收”或“排除不迁移”，并说明 Go 承接位置、原因和验证证据。
 - 所有自定义治理文档必须遵循 migration-governance-templates.md。
 - 每个批次完成后更新 migration-traceability.md。
 - 批次结束时更新 migration-roadmap.md、migration-decisions.md、migration-gaps.md。
@@ -773,6 +776,8 @@ PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm
 要求：
 - 只执行当前批次计划。
 - 先验证或编写测试，再实现代码。
+- Go 测试文件必须默认与被测源码同目录、同 package，例如 `foo_repository.go` 对应 `foo_repository_test.go`；不得为当前包单元测试另建独立测试目录。
+- 如因跨包系统测试、端到端测试、集成测试或项目既有约定需要放到独立测试目录，必须记录原因、测试类型和关联批次。
 - 不得超出当前阶段范围。
 - 不得超出当前批次 Java source scope 和 Go target scope。
 - 不得修改前序批次已验收成果，除非记录 Decision/GAP、影响范围和重新验证结果。
@@ -783,6 +788,7 @@ PREVIOUS_BATCH_REFERENCES = <无 / 前序批次 ID，例如 P1-orm-01 或 P1-orm
 - 如果当前阶段涉及真实 Service 实现，Service 必须通过注入 `txmanager.Manager` 编排业务事务；需要事务时使用 `manager.WithinTransaction(ctx, func(txCtx context.Context) error { ... })`，并把 `txCtx` 传给 Repository 方法。
 - Service 不得直接调用 `manager.DB(ctx)` 拼装 GORM 查询，不得持有或操作 `*gorm.DB`，不得调用 `gorm.Open`。
 - 如果当前阶段涉及 MyBatis Example，不得生成 Go `XxxExample` DSL；必须从实际业务调用点提取查询语义，并在 Repository 内使用 GORM 动态 Query 实现。
+- 被读取但不生成对应 Go 文件的 Java 文件或符号，必须更新 migration-traceability.md 的“Java 重构吸收 / 排除记录”；排除不迁移必须说明原因和验证证据，无法确认时创建 GAP。
 - Service、Handler、Scheduler、Interceptor 等业务层不得直接持有或拼装 `*gorm.DB`。
 - 每个 Go 文件和关键符号必须标注 Java 来源。
 - 所有自定义治理文档必须遵循 migration-governance-templates.md，只做增量更新，不覆盖历史记录。
@@ -828,6 +834,7 @@ IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 - 是否符合当前阶段范围和非目标。
 - 是否只覆盖当前批次 scope，没有顺手迁移其他批次或后续阶段。
 - 是否覆盖当前批次对应的 Java 文件、Java 符号、Go 文件、Go 关键符号和测试。
+- Go 测试文件是否与被测源码同目录、同 package；如存在独立测试目录，是否有明确测试类型、项目约定和记录原因。
 - Java/Go 行为是否完成阶段性对齐。
 - 如果当前阶段涉及 ORM / Repository，是否遵守 GORM 实现约束，包括静态 SQL、动态 SQL、AutoMigrate、隐式 CRUD、SQL 常量和 GAP 记录。
 - 如果当前阶段涉及 ORM / Repository，是否所有 Repository 都通过 `txmanager.Manager` 注入获取 DB，是否没有直接注入裸 `*gorm.DB`、调用 `gorm.Open` 或使用全局 DB。
@@ -835,6 +842,7 @@ IS_FINAL_BATCH_OF_PHASE = <是 / 否>
 - 如果当前阶段涉及真实 Service 实现，是否所有 Service 实现对象都注入 `txmanager.Manager`，是否由 Service 使用 `manager.WithinTransaction` 编排业务事务并把 `txCtx` 传给 Repository。
 - 是否确认 Service 未直接调用 `manager.DB(ctx)` 拼装 GORM 查询，未持有或操作 `*gorm.DB`，未调用 `gorm.Open`。
 - 如果当前阶段涉及 MyBatis Example，是否没有直接翻译 `XxxExample` DSL，是否已覆盖所有实际业务调用点，是否已记录 `Java 业务调用点 + Example 条件 + Mapper 方法 -> Go Repository 方法或 QueryFilter` 的映射。
+- 被读取但不生成对应 Go 文件的 Java 文件或符号，是否已在 migration-traceability.md 中记录为“重构吸收”或“排除不迁移”，并说明 Go 承接位置、原因、验证结果和 GAP/备注。
 - 是否确认 GORM 动态 Query 只出现在 Repository 层，未泄漏到 Service、Handler、Scheduler、Interceptor 等业务层。
 - 测试和验证是否通过。
 - Go 文件头和关键符号是否标注 Java 来源。

@@ -104,6 +104,7 @@ Go 侧实现规则：
 - 将 Java Example 调用点表达的查询意图抽象为 Repository 语义化方法或 Repository QueryFilter
 - GORM 的 `Where` / `Or` / `Scopes` / `Clauses` / `Order` / `Limit` / `Offset` 只允许在 Repository 层使用
 - Service、Handler、Scheduler、Interceptor 等业务层不得直接持有或拼装 `*gorm.DB`
+- Example / Criteria / Criterion Java 文件本身如果不生成 Go 文件，必须在 `migration-traceability.md` 中记录为 `ABSORBED` / “重构吸收”，并写明 Go Repository 方法或 QueryFilter 承接位置
 - 如果某个 Example 没有找到业务调用点，不臆造完整 Go 实现，先标记为 GAP
 
 溯源记录必须体现：
@@ -170,14 +171,18 @@ migration-traceability.md
 - 多个 Java 接口或实现共同组成一个 Go 能力
 - Java DTO、Entity、Enum 在 Go 中需要按层次重新归属
 - Go 语言组织方式不适合机械复制 Java 类结构
+- Java 框架辅助类、生成类或 DSL 类不适合在 Go 中机械复制，而是被 Go Repository、QueryFilter、Middleware、Service 或运行时模型重构吸收
+- Java 文件或符号经确认没有业务调用点，或不属于当前迁移目标，需要排除不迁移
 
-任何非 1:1 映射都必须在 `migration-traceability.md` 中记录：
+任何非 1:1 映射，或者 Java 文件被读取后不生成对应 Go 文件的情况，都必须在 `migration-traceability.md` 中记录：
 
 - 映射类型
 - 调整原因
 - 涉及的 Java 文件
-- 涉及的 Go 文件
+- 涉及的 Go 文件、Go 方法、Go QueryFilter 或承接位置
 - 人工核验状态
+
+这类记录用于说明“有意不生成 Go 文件”，不是迁移遗漏。
 
 ### 3.8 Go 文件必须标注 Java 来源
 
@@ -281,6 +286,8 @@ migration-traceability.md
 1:N  一个 Java 文件拆分为多个 Go 文件
 N:1  多个 Java 文件合并为一个 Go 文件
 NEW  没有直接 Java 文件来源的 Go 原生基础设施
+ABSORBED  Java 文件/符号不生成 Go 对应文件，其语义被 Go 代码重构吸收
+EXCLUDED  Java 文件/符号经确认不迁移，并记录排除原因
 ```
 
 状态统一使用：
@@ -292,11 +299,13 @@ NEW  没有直接 Java 文件来源的 Go 原生基础设施
 已验证
 GAP
 排除
+重构吸收
 ```
 
 每次阶段执行只更新本次涉及的增量记录，同时保留历史映射，便于判断：
 
 - Java 文件是否遗漏
+- Java 文件是否被明确记录为直接迁移、拆分、合并、重构吸收、排除或 GAP
 - Go 文件是否缺少来源
 - 迁移状态是否发生变化
 - 上一阶段结论是否需要调整
@@ -304,7 +313,26 @@ GAP
 
 为保证增量核验可靠，映射表还应在阶段标题或元数据中记录本次分析使用的 Java 基线 commit SHA。
 
-### 3.11 批次隔离
+### 3.11 测试文件默认与源码同包同目录
+
+所有阶段生成的 Go 测试文件，默认应与被测源码文件放在同一目录、同一 Go package 下。
+
+示例：
+
+```text
+internal/consulapi/repository/kv_repository.go
+internal/consulapi/repository/kv_repository_test.go
+```
+
+要求：
+
+- 不要另建独立测试目录承载当前包的单元测试。
+- 不要把 Repository、Handler、Service、Runtime 等包内测试统一塞到外部 `tests/` 目录。
+- 测试文件名应优先贴近被测源码，例如 `kv_repository_test.go`、`kv_handler_test.go`、`kv_service_test.go`。
+- 测试 package 默认使用源码同包 package，除非项目已有明确的 `_test` 外部包规范。
+- 只有跨包系统测试、端到端测试、集成测试或项目既有约定明确要求时，才允许放到独立测试目录；例外必须在 `migration-decisions.md` 或 `migration-traceability.md` 中记录原因。
+
+### 3.12 批次隔离
 
 同一阶段可以拆成多个批次执行，降低人工检查压力。例如阶段 1 持久化层可以按 Java 源码路径、Mapper 分组或业务表分为 `P1-orm-01`、`P1-orm-02`。
 

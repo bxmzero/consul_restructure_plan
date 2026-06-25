@@ -531,11 +531,20 @@ MyBatis Example / Criteria / Criterion 不直接记录为 `XxxExample.java -> Xx
 |---|---|---|---|---|---|---|---|---|
 | `<CURRENT_BATCH>` | `FooService.listFoo` | `key like ? AND session_id IS NULL` | `FooMapper.selectByExample` | `internal/.../foo_repository.go` | `FooQuery`, `ListFoo` | 已验证 | 测试通过 | `FooExample.java` 仅作为 DSL 来源 |
 
+### Java 重构吸收 / 排除记录
+
+如果某个 Java 文件或符号被 Agent 阅读，但重构后不需要生成对应 Go 文件，必须在这里记录。该记录用于说明“有意不生成 Go 文件”，不是迁移遗漏。
+
+| 批次 ID | Java contentPath | Java 文件/符号 | 处理方式 | Go 承接位置 | 原因 | 验证结果 | GAP/备注 |
+|---|---|---|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `bic-service/src/.../BicServiceKvExample.java` | `BicServiceKvExample`, `Criteria`, `Criterion` | 重构吸收 | `internal/.../kv_repository.go`: `KVQuery`, `List` | MyBatis Example 是查询 DSL，不生成 Go DSL；实际查询语义由业务调用点和 Repository QueryFilter 承接 | Example 调用点测试通过 | 无 |
+| `<CURRENT_BATCH>` | `bic-service/src/.../UnusedExample.java` | `UnusedExample` | 排除不迁移 | 无 | 未发现业务调用点，不臆造 Go 实现 | 人工确认或静态检索确认 | `GAP-XXX` |
+
 ### 测试映射
 
-| 批次 ID | Go 测试文件 | 测试名称 | 覆盖 Java 行为 | 状态 |
-|---|---|---|---|---|
-| `<CURRENT_BATCH>` | `<TEST_PATH>` | `<TEST_NAME>` | `<JAVA_BEHAVIOR>` | `<STATUS>` |
+| 批次 ID | Go 被测源码 | Go 测试文件 | 测试 package | 是否同目录 | 测试名称 | 覆盖 Java 行为 | 状态 | GAP/备注 |
+|---|---|---|---|---|---|---|---|---|
+| `<CURRENT_BATCH>` | `internal/.../foo_repository.go` | `internal/.../foo_repository_test.go` | `repository` | 是 | `<TEST_NAME>` | `<JAVA_BEHAVIOR>` | `<STATUS>` | 无 |
 
 ## 变更记录
 
@@ -551,6 +560,8 @@ MyBatis Example / Criteria / Criterion 不直接记录为 `XxxExample.java -> Xx
 1:N  一个 Java 文件拆分为多个 Go 文件
 N:1  多个 Java 文件合并为一个 Go 文件
 NEW  没有直接 Java 文件来源的 Go 原生实现
+ABSORBED  Java 文件/符号不生成 Go 对应文件，其语义被 Go 代码重构吸收
+EXCLUDED  Java 文件/符号经确认不迁移，并记录排除原因
 ```
 
 ### 7.5 迁移状态
@@ -563,6 +574,7 @@ NEW  没有直接 Java 文件来源的 Go 原生实现
 已验证
 GAP
 排除
+重构吸收
 ```
 
 ### 7.6 更新规则
@@ -571,6 +583,8 @@ GAP
 - 1:N 映射可以按每个 Go 文件拆成多行，但必须使用相同 Java 来源
 - N:1 映射可以合并为一行，但必须列出全部 Java 来源
 - Go-native 文件使用映射类型 `NEW`，并说明服务于哪个 Java 迁移能力
+- Java 文件或符号被 Go 代码重构吸收时，必须使用 `ABSORBED` 或“重构吸收”记录，不得当作遗漏忽略
+- Java 文件或符号确认不迁移时，必须使用 `EXCLUDED` 或“排除不迁移”记录原因、证据和是否关联 GAP
 - 记录只允许增量更新，不得清空后重新生成
 
 ## 8. phase-N-handoff.md 模板
